@@ -1,0 +1,5 @@
+euler-vault-kit/=lib/euler-vault-kit/src/
+openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/
+ethereum-vault-connector/=lib/ethereum-vault-connector/src/
+evc-playground/=lib/evc-playground/src/
+openzeppelin/=lib/openzeppelin-contracts/contracts/

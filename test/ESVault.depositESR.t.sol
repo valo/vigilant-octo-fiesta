@@ -120,8 +120,6 @@ contract ESVaultTestAllocate is ESVaultTestBase {
         uint256 currDebt = eTST.debtOf(borrower);
         assertApproxEqAbs(currDebt, 5.047850970117656981e18, 0.0001e18);
 
-        currDebt = eTST.debtOf(borrower);
-        assertApproxEqAbs(currDebt, 5.047850970117656981e18, 0.0001e18);
         uint256 totalInterest = currDebt - 5e18;
         uint256 govFee = totalInterest * eTST.interestFee() / 1e4;
         uint256 netInterest = totalInterest - govFee;

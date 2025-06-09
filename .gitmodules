@@ -7,9 +7,6 @@
 [submodule "lib/euler-vault-kit"]
 	path = lib/euler-vault-kit
 	url = https://github.com/euler-xyz/euler-vault-kit
-[submodule "lib/evc-playground"]
-	path = lib/evc-playground
-	url = https://github.com/euler-xyz/evc-playground
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts

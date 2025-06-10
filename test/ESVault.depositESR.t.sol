@@ -50,7 +50,9 @@ contract ESVaultTestAllocate is ESVaultTestBase {
         collateralAsset = new TestERC20("Collateral Token", "COLAT", 18, false);
 
         collateralVault = IEVault(
-            factory.createProxy(address(0), true, abi.encodePacked(address(collateralAsset), address(oracle), unitOfAccount))
+            factory.createProxy(
+                address(0), true, abi.encodePacked(address(collateralAsset), address(oracle), unitOfAccount)
+            )
         );
         collateralVault.setHookConfig(address(0), 0);
         collateralVault.setInterestRateModel(address(new IRMTestDefault()));

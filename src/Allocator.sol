@@ -47,12 +47,11 @@ contract Allocator is Ownable {
         esynth.burn(address(this), amount);
     }
 
-
     function accumulatedInterest(address vault) external view returns (uint256) {
         IEVault esynthVault = IEVault(vault);
 
         uint256 currentShares = esynthVault.balanceOf(address(this));
-        
+
         require(currentShares > 0, "No shares in the vault");
 
         uint256 underlyingBalance = esynthVault.convertToAssets(currentShares);
@@ -63,7 +62,7 @@ contract Allocator is Ownable {
 
     function withdrawInterest(address vault) internal returns (uint256) {
         uint256 interest = this.accumulatedInterest(vault);
-        
+
         require(interest > 0, "No interest to withdraw");
 
         IEVault(vault).withdraw(interest, address(this), address(this));

@@ -183,10 +183,7 @@ contract nUSDGeneralTest is EVaultTestBase {
         vm.prank(owner);
         vm.expectRevert();
         evc.call(
-            address(nusd),
-            address(uint160(owner) ^ id),
-            0,
-            abi.encodeCall(nusd.setCapacity, (address(this), amount))
+            address(nusd), address(uint160(owner) ^ id), 0, abi.encodeCall(nusd.setCapacity, (address(this), amount))
         );
 
         // fails if called by the owner operator through the EVC

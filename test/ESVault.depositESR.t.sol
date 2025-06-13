@@ -131,7 +131,9 @@ contract ESVaultTestAllocate is EVaultTestBase {
         uint256 DSRfee = netInterest * assetTSTAsSynth.interestFee() / 1e4;
         uint256 netDSRInterest = netInterest - DSRfee;
         // Withdraw the interest to the ESR
-        assetTSTAsSynth.depositInterestInDSR(eTST);
+        assetTSTAsSynth.depositInterestInDSR(eTST, address(this));
+
+        assertApproxEqAbs(assetTSTAsSynth.balanceOf(address(this)), DSRfee, 0.0001e18);
 
         // After 2 weeks all the interest should be accumulated in the deposit
         skip(14 days);

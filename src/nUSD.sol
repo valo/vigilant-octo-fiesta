@@ -169,7 +169,7 @@ contract nUSD is ERC20EVCCompatible, Ownable {
         return interest;
     }
 
-    function depositInterestInDSR(IEVault vault) external onlyOwner {
+    function depositInterestInDSR(IEVault vault, address feesReceiver) external onlyOwner {
         require(allocations[address(vault)] > 0, "No allocations for the vault");
 
         uint256 interest = withdrawInterest(vault);
@@ -178,13 +178,8 @@ contract nUSD is ERC20EVCCompatible, Ownable {
 
         this.transfer(address(dsrVault), netInterest);
         dsrVault.gulp();
-    }
 
-    function withdrawFees(address to) external onlyOwner {
-        uint256 balance = this.balanceOf(address(this));
-        require(balance > 0, "No fees to withdraw");
-
-        this.transfer(to, balance);
+        this.transfer(feesReceiver, fee);
     }
 
     /// @notice Retrieves the message sender in the context of the EVC.

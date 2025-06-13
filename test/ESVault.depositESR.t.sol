@@ -4,28 +4,31 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ESVaultTestBase, ESynth} from "../lib/euler-vault-kit/test/unit/esvault/ESVaultTestBase.t.sol";
 import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
 import {EulerSavingsRate} from "euler-vault-kit/Synths/EulerSavingsRate.sol";
 import {TestERC20} from "../lib/euler-vault-kit/test/mocks/TestERC20.sol";
 import {IRMTestDefault} from "../lib/euler-vault-kit/test/mocks/IRMTestDefault.sol";
-import {MockHook} from "../lib/euler-vault-kit/test/unit/evault/EVaultTestBase.t.sol";
+import {MockHook, EVaultTestBase} from "../lib/euler-vault-kit/test/unit/evault/EVaultTestBase.t.sol";
 import {TypesLib} from "../lib/euler-vault-kit/src/EVault/shared/types/Types.sol";
 
 import {nUSD} from "../src/nUSD.sol";
-import {Allocator} from "../src/Allocator.sol";
 
-contract ESVaultTestAllocate is ESVaultTestBase {
+contract ESVaultTestAllocate is EVaultTestBase {
     using TypesLib for uint256;
 
     address borrower;
     TestERC20 collateralAsset;
     IEVault collateralVault;
     EulerSavingsRate DSR;
-    Allocator allocator;
+    nUSD assetTSTAsSynth;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
+
+        assetTSTAsSynth = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
+        assetTST = TestERC20(address(assetTSTAsSynth));
+
+        eTST = createSynthEVault(address(assetTST));
 
         assetTSTAsSynth = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
         assetTST = TestERC20(address(assetTSTAsSynth));
@@ -35,14 +38,10 @@ contract ESVaultTestAllocate is ESVaultTestBase {
 
         DSR = new EulerSavingsRate(address(evc), address(assetTSTAsSynth), "Euler Savings Vault", "ESR");
 
-        // Allocator setup
-        allocator = new Allocator(
-            address(assetTSTAsSynth),
-            address(DSR),
-            100 // 10% interest fee
-        );
-        assetTSTAsSynth.setCapacity(address(allocator), 10000e18);
-        assetTSTAsSynth.transferOwnership(address(allocator));
+        assetTSTAsSynth.setCapacity(address(this), 10000e18);
+        assetTSTAsSynth.setInterestFee(0.1e4);
+        assetTSTAsSynth.setDsrVault(DSR);
+        assetTSTAsSynth.mint(address(assetTSTAsSynth), 10000e18);
 
         // Set up borrower and the collateral vault
         borrower = makeAddr("borrower");
@@ -95,15 +94,15 @@ contract ESVaultTestAllocate is ESVaultTestBase {
     // }
 
     function test_allocate_from_synth() public {
-        allocator.allocate(address(eTST), 100e18);
+        assetTSTAsSynth.allocate(address(eTST), 100e18);
 
         // assertEq(assetTSTAsSynth.isIgnoredForTotalSupply(address(eTST)), true);
         assertEq(assetTST.balanceOf(address(eTST)), 100e18);
-        assertEq(eTST.balanceOf(address(allocator)), 100e18);
+        assertEq(eTST.balanceOf(address(assetTSTAsSynth)), 100e18);
     }
 
     function test_accumulate_interest() public {
-        allocator.allocate(address(eTST), 100e18);
+        assetTSTAsSynth.allocate(address(eTST), 100e18);
 
         startHoax(borrower);
 
@@ -126,13 +125,13 @@ contract ESVaultTestAllocate is ESVaultTestBase {
         uint256 govFee = totalInterest * eTST.interestFee() / 1e4;
         uint256 netInterest = totalInterest - govFee;
 
-        uint256 interest = allocator.accumulatedInterest(address(eTST));
+        uint256 interest = assetTSTAsSynth.accumulatedInterest(eTST);
         assertApproxEqAbs(interest, netInterest, 0.0001e18);
 
-        uint256 DSRfee = netInterest * allocator.interestFee() / 1e4;
+        uint256 DSRfee = netInterest * assetTSTAsSynth.interestFee() / 1e4;
         uint256 netDSRInterest = netInterest - DSRfee;
         // Withdraw the interest to the ESR
-        allocator.depositInterestInDSR(address(eTST));
+        assetTSTAsSynth.depositInterestInDSR(eTST);
 
         // After 2 weeks all the interest should be accumulated in the deposit
         skip(14 days);

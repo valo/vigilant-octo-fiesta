@@ -27,11 +27,6 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
         assetTSTAsSynth = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
         assetTST = TestERC20(address(assetTSTAsSynth));
-
-        eTST = createSynthEVault(address(assetTST));
-
-        assetTSTAsSynth = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
-        assetTST = TestERC20(address(assetTSTAsSynth));
         eTST = createSynthEVault(address(assetTSTAsSynth));
         eTST.setHookConfig(address(0), 0);
         eTST.setInterestFee(0.1e4);

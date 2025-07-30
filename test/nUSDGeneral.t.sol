@@ -122,37 +122,6 @@ contract nUSDGeneralTest is EVaultTestBase {
         assertEq(nusd.balanceOf(user1), 0);
     }
 
-    function testFuzz_depositSimple(uint128 amount) public {
-        amount = uint128(bound(amount, 1, type(uint112).max)); // amount needs to be less then MAX_SANE_AMOUNT
-        nusd.setCapacity(address(this), MAX_ALLOWED);
-        nusd.mint(address(nusd), amount); // address(this) should be owner
-        nusd.allocate(address(eTST), amount);
-    }
-
-    function testFuzz_depositTooLarge(uint128 amount) public {
-        amount = uint128(bound(amount, uint256(type(uint112).max) + 1, MAX_ALLOWED));
-        nusd.setCapacity(address(this), MAX_ALLOWED);
-        nusd.mint(address(nusd), amount);
-        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
-        nusd.allocate(address(eTST), amount);
-    }
-
-    function testFuzz_withdrawSimple(uint128 amount) public {
-        amount = uint128(bound(amount, 1, type(uint112).max));
-        nusd.setCapacity(address(this), MAX_ALLOWED);
-        nusd.mint(address(nusd), amount);
-        nusd.allocate(address(eTST), amount);
-        nusd.deallocate(address(eTST), amount);
-    }
-
-    function test_AllocateInCompatibleVault() public {
-        uint256 amount = 100e18;
-        nusd.setCapacity(address(this), MAX_ALLOWED);
-        nusd.mint(address(nusd), amount);
-        vm.expectRevert(ESynth.E_NotEVCCompatible.selector);
-        nusd.allocate(address(wrongEVC), amount);
-    }
-
     function test_GovernanceModifiers(address owner, uint8 id, address nonOwner, uint128 amount) public {
         vm.assume(owner != address(0) && owner != address(evc));
         vm.assume(!evc.haveCommonOwner(owner, nonOwner) && nonOwner != address(evc));

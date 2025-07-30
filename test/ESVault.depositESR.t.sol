@@ -23,26 +23,27 @@ contract ESVaultTestAllocate is ESVaultTestBase {
     IEVault collateralVault;
     EulerSavingsRate DSR;
     Allocator allocator;
+    nUSD synthUSD;
 
     function setUp() public override {
         super.setUp();
 
-        assetTSTAsSynth = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
-        assetTST = TestERC20(address(assetTSTAsSynth));
-        eTST = createSynthEVault(address(assetTSTAsSynth));
+        synthUSD = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
+        assetTST = TestERC20(address(synthUSD));
+        eTST = createSynthEVault(address(synthUSD));
         eTST.setHookConfig(address(0), 0);
         eTST.setInterestFee(0.1e4);
 
-        DSR = new EulerSavingsRate(address(evc), address(assetTSTAsSynth), "Euler Savings Vault", "ESR");
+        DSR = new EulerSavingsRate(address(evc), address(synthUSD), "Euler Savings Vault", "ESR");
 
         // Allocator setup
         allocator = new Allocator(
-            address(assetTSTAsSynth),
+            address(synthUSD),
             address(DSR),
             100 // 10% interest fee
         );
-        assetTSTAsSynth.setCapacity(address(allocator), 10000e18);
-        assetTSTAsSynth.transferOwnership(address(allocator));
+        synthUSD.setCapacity(address(allocator), 10000e18);
+        synthUSD.transferOwnership(address(allocator));
 
         // Set up borrower and the collateral vault
         borrower = makeAddr("borrower");
@@ -97,7 +98,7 @@ contract ESVaultTestAllocate is ESVaultTestBase {
     function test_allocate_from_synth() public {
         allocator.allocate(address(eTST), 100e18);
 
-        // assertEq(assetTSTAsSynth.isIgnoredForTotalSupply(address(eTST)), true);
+        // assertEq(synthUSD.isIgnoredForTotalSupply(address(eTST)), true);
         assertEq(assetTST.balanceOf(address(eTST)), 100e18);
         assertEq(eTST.balanceOf(address(allocator)), 100e18);
     }

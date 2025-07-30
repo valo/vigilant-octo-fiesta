@@ -27,6 +27,11 @@ contract Allocator is Ownable {
         return _interestFee;
     }
 
+    function setInterestFee(uint16 fee) external onlyOwner {
+        require(fee <= MAX_INTEREST_FEE, "Fee exceeds maximum limit");
+        _interestFee = fee;
+    }
+
     function allocate(address vault, uint256 amount) external onlyOwner {
         require(amount > 0, "Amount must be greater than zero");
 

@@ -159,22 +159,26 @@ contract nUSD is ERC20EVCCompatible, Ownable {
         return underlyingBalance > allocatedAmount ? underlyingBalance - allocatedAmount : 0;
     }
 
-    function withdrawInterest(IEVault esynthVault) internal returns (uint256) {
-        uint256 interest = this.accumulatedInterest(esynthVault);
+    function withdrawInterest(uint256 interestToWithdraw, IEVault esynthVault) internal returns (uint256) {
+        uint256 maxInterestToWithdraw = this.accumulatedInterest(esynthVault);
 
-        require(interest > 0, "No interest to withdraw");
+        require(interestToWithdraw <= maxInterestToWithdraw, "Can't withdraw more than accumulated interest");
 
-        esynthVault.withdraw(interest, address(this), address(this));
+        esynthVault.withdraw(interestToWithdraw, address(this), address(this));
 
-        return interest;
+        return interestToWithdraw;
     }
 
-    function depositInterestInDSR(IEVault vault, address feesReceiver) external onlyOwner {
+    function depositInterestInDSR(uint256 interestToWithdraw, IEVault vault, address feesReceiver) external onlyOwner {
         require(allocations[address(vault)] > 0, "No allocations for the vault");
 
-        uint256 interest = withdrawInterest(vault);
-        uint256 fee = (interest * _interestFee) / MAX_INTEREST_FEE;
-        uint256 netInterest = interest - fee;
+        uint256 interestWithdrawn = withdrawInterest(interestToWithdraw, vault);
+        if (interestWithdrawn == 0) {
+            return; // No interest to deposit
+        }
+
+        uint256 fee = (interestWithdrawn * _interestFee) / MAX_INTEREST_FEE;
+        uint256 netInterest = interestWithdrawn - fee;
 
         this.transfer(address(dsrVault), netInterest);
         dsrVault.gulp();

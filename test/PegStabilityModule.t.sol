@@ -22,15 +22,18 @@ contract PegStabilityModuleTest is Test {
     address feeRecipient = makeAddr("feeRecipient");
 
     function setUp() public {
-        vm.prank(owner);
+        startHoax(owner);
         synth = new nUSD(address(1), "Synth", "SYN");
+        vm.label(address(synth), "USDfi");
 
         underlying = new TestERC20("Underlying", "UND", 18, false);
+        vm.label(address(underlying), "Underlying");
 
-        vm.prank(owner);
+        startHoax(owner);
         psm = new PegStabilityModule(
             address(synth), address(underlying), feeRecipient, TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
         );
+        vm.label(address(psm), "PSM");
 
         underlying.mint(address(psm), 1000 ether);
         underlying.mint(user, 1000 ether);
@@ -41,9 +44,9 @@ contract PegStabilityModuleTest is Test {
         synth.mint(user, 1000 ether);
         vm.stopPrank();
 
-        vm.prank(user);
+        startHoax(user);
+
         synth.approve(address(psm), type(uint256).max);
-        vm.prank(user);
         underlying.approve(address(psm), type(uint256).max);
     }
 
@@ -53,7 +56,7 @@ contract PegStabilityModuleTest is Test {
         uint256 totalUnderlying = (amountIn * CONVERSION_PRICE) / psm.PRICE_SCALE();
         uint256 fee = totalUnderlying - expectedOut;
 
-        vm.prank(user);
+        startHoax(user);
         psm.swapToUnderlyingGivenIn(amountIn, receiver);
 
         assertEq(underlying.balanceOf(receiver), expectedOut);
@@ -63,20 +66,52 @@ contract PegStabilityModuleTest is Test {
     function testFuzz_swapToSynthFunnelFee(uint96 amountIn) public {
         amountIn = uint96(bound(amountIn, 1e18, underlying.balanceOf(user)));
         uint256 expectedOut = psm.quoteToSynthGivenIn(amountIn);
-        uint256 mintedUnderlying = (expectedOut * CONVERSION_PRICE) / psm.PRICE_SCALE();
+        uint256 mintedUnderlying = (expectedOut * psm.PRICE_SCALE()) / CONVERSION_PRICE;
         uint256 fee = amountIn - mintedUnderlying; // 1:1 price
 
-        vm.prank(user);
+        startHoax(user);
         psm.swapToSynthGivenIn(amountIn, receiver);
 
         assertEq(synth.balanceOf(receiver), expectedOut);
         assertEq(underlying.balanceOf(feeRecipient), fee);
     }
 
+    function testFuzz_swapToSynthGivenOut(uint96 amountOut) public {
+        uint256 maxOut = psm.quoteToSynthGivenIn(underlying.balanceOf(user));
+        amountOut = uint96(bound(amountOut, 1e18, maxOut));
+
+        uint256 expectedIn = psm.quoteToSynthGivenOut(amountOut);
+        uint256 totalUnderlying = (expectedIn * psm.PRICE_SCALE()) / CONVERSION_PRICE;
+        uint256 fee = totalUnderlying - amountOut;
+
+        startHoax(user);
+        uint256 actualIn = psm.swapToSynthGivenOut(amountOut, receiver);
+
+        assertEq(actualIn, expectedIn);
+        assertEq(synth.balanceOf(receiver), amountOut);
+        assertEq(underlying.balanceOf(feeRecipient), fee);
+    }
+
+    function testFuzz_swapToUnderlyingGivenOut(uint96 amountOut) public {
+        uint256 maxOut = psm.quoteToUnderlyingGivenIn(synth.balanceOf(user));
+        amountOut = uint96(bound(amountOut, 1e18, maxOut));
+
+        uint256 expectedIn = psm.quoteToUnderlyingGivenOut(amountOut);
+        uint256 totalUnderlying = (expectedIn * CONVERSION_PRICE) / psm.PRICE_SCALE();
+        uint256 fee = totalUnderlying - amountOut;
+
+        startHoax(user);
+        uint256 actualIn = psm.swapToUnderlyingGivenOut(amountOut, receiver);
+
+        assertEq(actualIn, expectedIn);
+        assertEq(underlying.balanceOf(receiver), amountOut);
+        assertEq(underlying.balanceOf(feeRecipient), fee);
+    }
+
     function testFuzz_setFees(uint256 uFee, uint256 sFee) public {
         uFee = bound(uFee, 0, psm.BPS_SCALE() - 1);
         sFee = bound(sFee, 0, psm.BPS_SCALE() - 1);
-        vm.prank(owner);
+        startHoax(owner);
         psm.setFees(uFee, sFee);
 
         assertEq(psm.toUnderlyingFeeBPS(), uFee);

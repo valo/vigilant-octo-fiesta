@@ -109,8 +109,8 @@ contract PegStabilityModuleTest is Test {
     }
 
     function testFuzz_setFees(uint256 uFee, uint256 sFee) public {
-        uFee = bound(uFee, 0, psm.BPS_SCALE() - 1);
-        sFee = bound(sFee, 0, psm.BPS_SCALE() - 1);
+        uFee = bound(uFee, 0, psm.MAX_FEE_BPS());
+        sFee = bound(sFee, 0, psm.MAX_FEE_BPS());
         startHoax(owner);
         psm.setFees(uFee, sFee);
 

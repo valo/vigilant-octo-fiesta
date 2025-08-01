@@ -13,6 +13,7 @@ contract PegStabilityModule is Ownable {
     using Math for uint256;
 
     uint256 public constant BPS_SCALE = 100_00;
+    uint256 public constant MAX_FEE_BPS = 50_00; // 50% in basis points
     uint256 public constant PRICE_SCALE = 1e18;
 
     nUSD public immutable synth;
@@ -38,7 +39,7 @@ contract PegStabilityModule is Ownable {
         if (_synth == address(0) || _underlying == address(0) || _feeRecipient == address(0)) {
             revert E_ZeroAddress();
         }
-        if (_toUnderlyingFeeBPS >= BPS_SCALE || _toSynthFeeBPS >= BPS_SCALE) {
+        if (_toUnderlyingFeeBPS > MAX_FEE_BPS || _toSynthFeeBPS > MAX_FEE_BPS) {
             revert E_FeeExceedsBPS();
         }
         if (_conversionPrice == 0) {
@@ -54,7 +55,7 @@ contract PegStabilityModule is Ownable {
     }
 
     function setFees(uint256 _toUnderlyingFeeBPS, uint256 _toSynthFeeBPS) external onlyOwner {
-        if (_toUnderlyingFeeBPS >= BPS_SCALE || _toSynthFeeBPS >= BPS_SCALE) {
+        if (_toUnderlyingFeeBPS > MAX_FEE_BPS || _toSynthFeeBPS > MAX_FEE_BPS) {
             revert E_FeeExceedsBPS();
         }
         toUnderlyingFeeBPS = _toUnderlyingFeeBPS;

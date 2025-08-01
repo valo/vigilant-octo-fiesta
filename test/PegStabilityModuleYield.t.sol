@@ -134,4 +134,31 @@ contract PegStabilityModuleYieldTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user));
         psm.setLiquidTarget(LIQUID_TARGET + 10);
     }
+
+    /// @notice fuzz test donating staked assets and then staking excess liquidity above the target
+    function testFuzz_donateStakedAssets(uint256 donation, uint256 gift) public {
+        uint256 userBal = underlying.balanceOf(user);
+        // ensure enough balance to donate and then gift underlying to PSM
+        donation = bound(donation, 1e6, userBal - 1e6);
+        gift = bound(gift, 1e6, userBal - donation);
+
+        uint256 preVault = vault.balanceOf(address(psm));
+
+        // user donates staked assets by depositing into vault for PSM
+        vm.prank(user);
+        underlying.approve(address(vault), donation);
+        vm.prank(user);
+        vault.deposit(donation, address(psm));
+
+        // PSM receives extra underlying to exceed its liquid target (simulate user transfer)
+        vm.prank(user);
+        underlying.transfer(address(psm), gift);
+        assertGt(underlying.balanceOf(address(psm)), LIQUID_TARGET);
+
+        // staking excess should stake the gift amount; vault shares include donation + gift
+        vm.prank(owner);
+        psm.stakeExcess();
+        assertEq(vault.balanceOf(address(psm)), preVault + donation + gift);
+        assertEq(underlying.balanceOf(address(psm)), LIQUID_TARGET);
+    }
 }

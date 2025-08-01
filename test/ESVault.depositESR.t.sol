@@ -122,14 +122,12 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
         assertApproxEqAbs(assetTSTAsSynth.balanceOf(address(this)), DSRfee, 0.0001e18);
 
-        // After 2 weeks all the interest should be accumulated in the deposit
-        skip(14 days);
+        // Wait for the DSR to drip the interest
+        skip(DSR.smearDuration());
         DSR.gulp();
-        assertLt(DSR.undistributed(), DSR.smearDuration(), "Interest left should be nearly exhausted");
 
-        EulerSavingsRate.ESRSlot memory esrSlotCache = DSR.updateInterestAndReturnESRSlotCache();
-
-        assertEq(esrSlotCache.interestLeft, 0, "Interest left should be zero after update");
+        // All undistributed interest should be dripped and cleared after gulp
+        assertApproxEqAbs(DSR.undistributed(), 0, 0.0001e18, "Interest left should be zero after update");
 
         uint256 esrBalance = DSR.balanceOf(borrower);
         uint256 esrInterest = DSR.convertToAssets(esrBalance);

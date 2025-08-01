@@ -8,6 +8,7 @@ import {nUSD} from "../src/nUSD.sol";
 import {TestERC20} from "../lib/euler-vault-kit/test/mocks/TestERC20.sol";
 import {MockStakedUSDe} from "./mocks/MockStakedUSDe.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
 contract PegStabilityModuleYieldTest is Test {
     uint256 constant CONVERSION_PRICE = 1e18;
@@ -117,5 +118,20 @@ contract PegStabilityModuleYieldTest is Test {
         assertEq(psm.pendingCooldown(), 0);
         assertEq(underlying.balanceOf(address(psm)), LIQUID_TARGET + amount);
         assertEq(vault.balanceOf(address(psm)), 900 ether - amount);
+    }
+
+    function test_setLiquidTarget_changesLiquidTarget() public {
+        uint256 newTarget = LIQUID_TARGET + 1 ether;
+        // initial target is the constructor value
+        assertEq(psm.liquidTarget(), LIQUID_TARGET);
+        vm.prank(owner);
+        psm.setLiquidTarget(newTarget);
+        assertEq(psm.liquidTarget(), newTarget);
+    }
+
+    function test_setLiquidTarget_onlyOwner() public {
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user));
+        psm.setLiquidTarget(LIQUID_TARGET + 10);
     }
 }

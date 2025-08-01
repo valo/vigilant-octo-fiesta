@@ -40,16 +40,7 @@ contract PegStabilityModuleYield is PegStabilityModule {
         uint256 _conversionPrice,
         address _stakingVault,
         uint256 _liquidTarget
-    )
-        PegStabilityModule(
-            _synth,
-            _underlying,
-            _feeRecipient,
-            _toUnderlyingFeeBPS,
-            _toSynthFeeBPS,
-            _conversionPrice
-        )
-    {
+    ) PegStabilityModule(_synth, _underlying, _feeRecipient, _toUnderlyingFeeBPS, _toSynthFeeBPS, _conversionPrice) {
         if (_stakingVault == address(0)) revert E_ZeroAddress();
         stakingVault = IStakedUSDeCooldown(_stakingVault);
         liquidTarget = _liquidTarget;
@@ -94,11 +85,7 @@ contract PegStabilityModuleYield is PegStabilityModule {
     }
 
     /// @inheritdoc PegStabilityModule
-    function swapToSynthGivenIn(uint256 amountIn, address receiver)
-        public
-        override
-        returns (uint256)
-    {
+    function swapToSynthGivenIn(uint256 amountIn, address receiver) public override returns (uint256) {
         uint256 amountOut = super.swapToSynthGivenIn(amountIn, receiver);
         // stake any new underlying above the liquidity target
         stakeExcess();
@@ -106,11 +93,7 @@ contract PegStabilityModuleYield is PegStabilityModule {
     }
 
     /// @inheritdoc PegStabilityModule
-    function swapToSynthGivenOut(uint256 amountOut, address receiver)
-        public
-        override
-        returns (uint256)
-    {
+    function swapToSynthGivenOut(uint256 amountOut, address receiver) public override returns (uint256) {
         uint256 amountIn = super.swapToSynthGivenOut(amountOut, receiver);
         // stake any new underlying above the liquidity target
         stakeExcess();

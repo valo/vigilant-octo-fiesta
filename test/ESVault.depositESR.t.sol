@@ -117,7 +117,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
         uint256 DSRfee = interestToWithdraw * assetTSTAsSynth.interestFee() / 1e4;
         uint256 netDSRInterest = interestToWithdraw - DSRfee;
-        // Withdraw the interest to the savings module
+        // Withdraw the interest to the ESR
         assetTSTAsSynth.depositInterestInDSR(interestToWithdraw, eTST, address(this));
 
         assertApproxEqAbs(assetTSTAsSynth.balanceOf(address(this)), DSRfee, 0.0001e18);
@@ -126,6 +126,10 @@ contract ESVaultTestAllocate is EVaultTestBase {
         skip(14 days);
         DSR.gulp();
         assertLt(DSR.undistributed(), DSR.smearDuration(), "Interest left should be nearly exhausted");
+
+        EulerSavingsRate.ESRSlot memory esrSlotCache = DSR.updateInterestAndReturnESRSlotCache();
+
+        assertEq(esrSlotCache.interestLeft, 0, "Interest left should be zero after update");
 
         uint256 esrBalance = DSR.balanceOf(borrower);
         uint256 esrInterest = DSR.convertToAssets(esrBalance);

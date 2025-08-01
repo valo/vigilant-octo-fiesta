@@ -10,7 +10,6 @@ import {MockWrongEVC} from "../lib/euler-vault-kit/test/mocks/MockWrongEVC.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
 import {Errors} from "euler-vault-kit/EVault/shared/Errors.sol";
-import {ESynth} from "euler-vault-kit/Synths/ESynth.sol";
 
 import {nUSD} from "../src/nUSD.sol";
 import {IRMStabilityFee} from "../src/IRMStabilityFee.sol";
@@ -81,7 +80,7 @@ contract nUSDGeneralTest is EVaultTestBase {
         amount = uint128(bound(amount, 0, MAX_ALLOWED));
         vm.assume(capacity < amount);
         nusd.setCapacity(address(this), capacity);
-        vm.expectRevert(ESynth.E_CapacityReached.selector);
+        vm.expectRevert(nUSD.E_CapacityReached.selector);
         nusd.mint(user1, amount);
     }
 
@@ -149,7 +148,7 @@ contract nUSDGeneralTest is EVaultTestBase {
         uint256 amount = 100e18;
         nusd.setCapacity(address(this), MAX_ALLOWED);
         nusd.mint(address(nusd), amount);
-        vm.expectRevert(ESynth.E_NotEVCCompatible.selector);
+        vm.expectRevert(nUSD.E_NotEVCCompatible.selector);
         nusd.allocate(address(wrongEVC), amount);
     }
 

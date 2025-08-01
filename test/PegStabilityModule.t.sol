@@ -29,7 +29,6 @@ contract PegStabilityModuleTest is Test {
         underlying = new TestERC20("Underlying", "UND", 18, false);
         vm.label(address(underlying), "Underlying");
 
-        startHoax(owner);
         psm = new PegStabilityModule(
             address(synth), address(underlying), feeRecipient, TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
         );

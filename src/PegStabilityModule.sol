@@ -99,7 +99,7 @@ contract PegStabilityModule is Ownable {
         return amountIn;
     }
 
-    function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
+    function swapToSynthGivenIn(uint256 amountIn, address receiver) public virtual returns (uint256) {
         uint256 amountOut = quoteToSynthGivenIn(amountIn);
         if (amountIn == 0 || amountOut == 0) {
             return 0;
@@ -116,7 +116,7 @@ contract PegStabilityModule is Ownable {
         return amountOut;
     }
 
-    function swapToSynthGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
+    function swapToSynthGivenOut(uint256 amountOut, address receiver) public virtual returns (uint256) {
         uint256 amountIn = quoteToSynthGivenOut(amountOut);
         if (amountIn == 0 || amountOut == 0) {
             return 0;

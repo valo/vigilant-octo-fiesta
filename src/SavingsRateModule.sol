@@ -144,4 +144,3 @@ contract SavingsRateModule is ERC4626 {
         return accrued;
     }
 }
-

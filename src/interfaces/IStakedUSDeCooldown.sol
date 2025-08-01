@@ -6,4 +6,6 @@ interface IStakedUSDeCooldown {
     function cooldownShares(uint256 shares) external returns (uint256 assets);
     function unstake(address receiver) external;
     function balanceOf(address account) external view returns (uint256);
+    /// @notice return cooldown info for an account
+    function cooldowns(address account) external view returns (uint256 cooldownEnd, uint256 pendingAmount);
 }

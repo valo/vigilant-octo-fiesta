@@ -17,11 +17,7 @@ contract PegStabilityModuleYield is PegStabilityModule {
     /// @notice target amount of underlying to keep liquid for instant redemptions
     uint256 public liquidTarget;
 
-    /// @notice amount of underlying currently in cooldown awaiting withdrawal
-    uint256 public pendingCooldown;
 
-    /// @notice total shares currently staked in the vault by this contract
-    uint256 public stakedShares;
 
     /// @param _synth address of the synthetic token
     /// @param _underlying address of the underlying asset
@@ -58,30 +54,18 @@ contract PegStabilityModuleYield is PegStabilityModule {
         uint256 balance = underlying.balanceOf(address(this));
         if (balance > liquidTarget) {
             uint256 amount = balance - liquidTarget;
-            uint256 shares = stakingVault.deposit(amount, address(this));
-            stakedShares += shares;
+            stakingVault.deposit(amount, address(this));
         }
     }
 
     /// @notice begin cooldown to unstake `assets` amount of underlying from the vault
     function startUnstake(uint256 assets) external onlyOwner {
-        uint256 shares = stakingVault.cooldownAssets(assets);
-        stakedShares -= shares;
-        pendingCooldown += assets;
+        stakingVault.cooldownAssets(assets);
     }
 
     /// @notice finalize pending cooldown and pull any available assets back to this contract
     function finalizeUnstake() public {
-        uint256 beforeBal = underlying.balanceOf(address(this));
         stakingVault.unstake(address(this));
-        uint256 diff = underlying.balanceOf(address(this)) - beforeBal;
-        if (diff > 0) {
-            if (pendingCooldown >= diff) {
-                pendingCooldown -= diff;
-            } else {
-                pendingCooldown = 0;
-            }
-        }
     }
 
     /// @inheritdoc PegStabilityModule
@@ -98,5 +82,11 @@ contract PegStabilityModuleYield is PegStabilityModule {
         // stake any new underlying above the liquidity target
         stakeExcess();
         return amountIn;
+    }
+    /// @notice amount of underlying currently in cooldown awaiting withdrawal
+    /// @return amount of underlying currently in cooldown awaiting withdrawal
+    function pendingCooldown() public view returns (uint256) {
+        (, uint256 amount) = stakingVault.cooldowns(address(this));
+        return amount;
     }
 }

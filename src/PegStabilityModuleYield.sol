@@ -17,8 +17,6 @@ contract PegStabilityModuleYield is PegStabilityModule {
     /// @notice target amount of underlying to keep liquid for instant redemptions
     uint256 public liquidTarget;
 
-
-
     /// @param _synth address of the synthetic token
     /// @param _underlying address of the underlying asset
     /// @param _feeRecipient address that will receive fees
@@ -85,6 +83,7 @@ contract PegStabilityModuleYield is PegStabilityModule {
     }
     /// @notice amount of underlying currently in cooldown awaiting withdrawal
     /// @return amount of underlying currently in cooldown awaiting withdrawal
+
     function pendingCooldown() public view returns (uint256) {
         (, uint256 amount) = stakingVault.cooldowns(address(this));
         return amount;

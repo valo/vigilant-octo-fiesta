@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
@@ -8,12 +7,13 @@ import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
 import {IIRM} from "euler-vault-kit/InterestRateModels/IIRM.sol";
 import {RPow} from "euler-vault-kit/EVault/shared/lib/RPow.sol";
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
-import {EulerSavingsRate} from "euler-vault-kit/Synths/EulerSavingsRate.sol";
 import {TestERC20} from "../lib/euler-vault-kit/test/mocks/TestERC20.sol";
 import {IRMTestFixed} from "../lib/euler-vault-kit/test/mocks/IRMTestFixed.sol";
 import {MockHook, EVaultTestBase} from "../lib/euler-vault-kit/test/unit/evault/EVaultTestBase.t.sol";
 import {TypesLib} from "../lib/euler-vault-kit/src/EVault/shared/types/Types.sol";
 
+import {SavingsRateModule} from "../src/SavingsRateModule.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {nUSD} from "../src/nUSD.sol";
 
 contract ESVaultTestAllocate is EVaultTestBase {
@@ -24,7 +24,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
     address borrower;
     TestERC20 collateralAsset;
     IEVault collateralVault;
-    EulerSavingsRate DSR;
+    SavingsRateModule DSR;
     nUSD assetTSTAsSynth;
 
     function setUp() public virtual override {
@@ -37,7 +37,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
         eTST.setHookConfig(address(0), 0);
         eTST.setInterestFee(0.1e4);
 
-        DSR = new EulerSavingsRate(address(evc), address(assetTSTAsSynth), "Euler Savings Vault", "ESR");
+        DSR = new SavingsRateModule(IERC20(address(assetTST)), "Savings Vault", "SV", 2 weeks);
 
         assetTSTAsSynth.setCapacity(address(this), MAX_MINT_AMOUNT);
         assetTSTAsSynth.setInterestFee(0.1e4);
@@ -61,13 +61,11 @@ contract ESVaultTestAllocate is EVaultTestBase {
         collateralAsset.mint(borrower, 10000e18);
 
         // Setup
-
         oracle.setPrice(address(collateralAsset), unitOfAccount, 1e18);
 
         eTST.setLTV(address(collateralVault), 0.9e4, 0.9e4, 0);
 
         // Borrower
-
         startHoax(borrower);
 
         collateralAsset.approve(address(collateralVault), type(uint256).max);
@@ -76,28 +74,10 @@ contract ESVaultTestAllocate is EVaultTestBase {
         vm.stopPrank();
     }
 
-    // function test_allocate_from_non_synth() public {
-    //     vm.expectRevert(MockHook.E_OnlyAssetCanDeposit.selector);
-    //     eTST.deposit(100, address(this));
-
-    //     vm.expectRevert(MockHook.E_OperationDisabled.selector);
-    //     eTST.mint(100, address(this));
-
-    //     vm.expectRevert(MockHook.E_OperationDisabled.selector);
-    //     eTST.skim(100, address(this));
-
-    //     assertEq(eTST.maxDeposit(address(this)), type(uint112).max - eTST.cash());
-
-    //     assertEq(eTST.maxMint(address(this)), type(uint112).max - eTST.totalSupply());
-
-    //     assertEq(eTST.maxRedeem(address(this)), eTST.balanceOf(address(this)));
-    // }
-
     function testFuzz_allocate_from_synth(uint256 vaultCap) public {
         vm.assume(vaultCap > 0 && vaultCap <= MAX_MINT_AMOUNT);
         assetTSTAsSynth.allocate(address(eTST), vaultCap);
 
-        // assertEq(assetTSTAsSynth.isIgnoredForTotalSupply(address(eTST)), true);
         assertEq(assetTST.balanceOf(address(eTST)), vaultCap);
         assertEq(eTST.balanceOf(address(assetTSTAsSynth)), vaultCap);
     }
@@ -142,12 +122,12 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
         assertApproxEqAbs(assetTSTAsSynth.balanceOf(address(this)), DSRfee, 0.0001e18);
 
-        // After 2 weeks all the interest should be accumulated in the deposit
-        skip(14 days);
+        // Wait for the DSR to drip the interest
+        skip(DSR.smearDuration());
+        DSR.gulp();
 
-        EulerSavingsRate.ESRSlot memory esrSlotCache = DSR.updateInterestAndReturnESRSlotCache();
-
-        assertEq(esrSlotCache.interestLeft, 0, "Interest left should be zero after update");
+        // All undistributed interest should be dripped and cleared after gulp
+        assertApproxEqAbs(DSR.undistributed(), 0, 0.0001e18, "Interest left should be zero after update");
 
         uint256 esrBalance = DSR.balanceOf(borrower);
         uint256 esrInterest = DSR.convertToAssets(esrBalance);

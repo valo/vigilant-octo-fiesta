@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
 import {ERC20EVCCompatible, Context} from "euler-vault-kit/Synths/ERC20EVCCompatible.sol";
-import {EulerSavingsRate} from "euler-vault-kit/Synths/EulerSavingsRate.sol";
+import {SavingsRateModule} from "./SavingsRateModule.sol";
 import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
 
 /// @title nUSD
@@ -14,7 +14,7 @@ import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
 contract nUSD is ERC20EVCCompatible, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    EulerSavingsRate public dsrVault;
+    SavingsRateModule public dsrVault;
     mapping(address => uint256) public allocations;
 
     // Fee for interest withdrawal, expressed in basis points (1e4 = 100%)
@@ -58,7 +58,7 @@ contract nUSD is ERC20EVCCompatible, Ownable {
         _interestFee = interestFee_;
     }
 
-    function setDsrVault(EulerSavingsRate dsrVault_) external onlyEVCAccountOwner onlyOwner {
+    function setDsrVault(SavingsRateModule dsrVault_) external onlyEVCAccountOwner onlyOwner {
         dsrVault = dsrVault_;
     }
 

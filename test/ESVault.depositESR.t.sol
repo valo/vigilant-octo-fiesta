@@ -30,7 +30,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
     function setUp() public virtual override {
         super.setUp();
 
-        assetTSTAsSynth = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
+        assetTSTAsSynth = new nUSD("Test Synth", "TST");
         assetTST = TestERC20(address(assetTSTAsSynth));
         eTST = createSynthEVault(address(assetTSTAsSynth));
         eTST.setInterestRateModel(address(new IRMTestFixed()));
@@ -76,6 +76,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
     function testFuzz_allocate_from_synth(uint256 vaultCap) public {
         vm.assume(vaultCap > 0 && vaultCap <= MAX_MINT_AMOUNT);
+
         assetTSTAsSynth.allocate(address(eTST), vaultCap);
 
         assertEq(assetTST.balanceOf(address(eTST)), vaultCap);
@@ -111,14 +112,14 @@ contract ESVaultTestAllocate is EVaultTestBase {
         uint256 expectedDebt = Math.mulDiv(borrowAmount, multiplier, 1e27);
         assertApproxEqAbs(currDebt, expectedDebt, 0.0001e18);
 
-        uint256 interest = assetTSTAsSynth.accumulatedInterest(eTST);
+        uint256 interest = assetTSTAsSynth.accumulatedInterest(address(eTST));
 
         uint256 interestToWithdraw = interest > eTST.cash() ? eTST.cash() : interest;
 
         uint256 DSRfee = interestToWithdraw * assetTSTAsSynth.interestFee() / 1e4;
         uint256 netDSRInterest = interestToWithdraw - DSRfee;
         // Withdraw the interest to the ESR
-        assetTSTAsSynth.depositInterestInDSR(interestToWithdraw, eTST, address(this));
+        assetTSTAsSynth.depositInterestInDSR(interestToWithdraw, address(eTST), address(this));
 
         assertApproxEqAbs(assetTSTAsSynth.balanceOf(address(this)), DSRfee, 0.0001e18);
 

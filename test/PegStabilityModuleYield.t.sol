@@ -27,7 +27,7 @@ contract PegStabilityModuleYieldTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        synth = new nUSD(address(1), "Synth", "SYN");
+        synth = new nUSD("Synth", "SYN");
         underlying = new TestERC20("Underlying", "UND", 18, false);
         vault = new MockStakedUSDe(IERC20(address(underlying)), 3 days);
 

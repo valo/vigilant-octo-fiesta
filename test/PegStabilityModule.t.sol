@@ -23,7 +23,7 @@ contract PegStabilityModuleTest is Test {
 
     function setUp() public {
         startHoax(owner);
-        synth = new nUSD(address(1), "Synth", "SYN");
+        synth = new nUSD("Synth", "SYN");
         vm.label(address(synth), "USDfi");
 
         underlying = new TestERC20("Underlying", "UND", 18, false);

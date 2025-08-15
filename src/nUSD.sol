@@ -2,16 +2,16 @@ pragma solidity ^0.8.0;
 
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
-import {ERC20EVCCompatible, Context} from "euler-vault-kit/Synths/ERC20EVCCompatible.sol";
+import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {SavingsRateModule} from "./SavingsRateModule.sol";
-import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
+import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 
 /// @title nUSD
 /// @custom:security-contact security@euler.xyz
 /// @author Valentin Mihov (valentin.mihpv@gmail.com)
 /// @notice A syntetix USD token which is backed by over collateralized assets.
 // SPDX-License-Identifier: GPL-2.0-or-later
-contract nUSD is ERC20EVCCompatible, Ownable {
+contract nUSD is ERC20, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     SavingsRateModule public dsrVault;
@@ -37,13 +37,9 @@ contract nUSD is ERC20EVCCompatible, Ownable {
     event MinterCapacitySet(address indexed minter, uint256 capacity);
 
     error E_CapacityReached();
-    error E_NotEVCCompatible();
     error E_InvalidInterestFee();
 
-    constructor(address evc_, string memory name_, string memory symbol_)
-        ERC20EVCCompatible(evc_, name_, symbol_)
-        Ownable(msg.sender)
-    {
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) Ownable(msg.sender) {
         ignoredForTotalSupply.add(address(this));
     }
 
@@ -51,14 +47,14 @@ contract nUSD is ERC20EVCCompatible, Ownable {
         return _interestFee;
     }
 
-    function setInterestFee(uint16 interestFee_) external onlyEVCAccountOwner onlyOwner {
+    function setInterestFee(uint16 interestFee_) external onlyOwner {
         if (interestFee_ > MAX_INTEREST_FEE) {
             revert E_InvalidInterestFee();
         }
         _interestFee = interestFee_;
     }
 
-    function setDsrVault(SavingsRateModule dsrVault_) external onlyEVCAccountOwner onlyOwner {
+    function setDsrVault(SavingsRateModule dsrVault_) external onlyOwner {
         dsrVault = dsrVault_;
     }
 
@@ -66,7 +62,7 @@ contract nUSD is ERC20EVCCompatible, Ownable {
     /// @dev Can only be called by the owner of the contract.
     /// @param minter The address of the minter to set the capacity for.
     /// @param capacity The capacity to set for the minter.
-    function setCapacity(address minter, uint128 capacity) external onlyEVCAccountOwner onlyOwner {
+    function setCapacity(address minter, uint128 capacity) external onlyOwner {
         minters[minter].capacity = capacity;
         emit MinterCapacitySet(minter, capacity);
     }
@@ -128,49 +124,54 @@ contract nUSD is ERC20EVCCompatible, Ownable {
     /// @dev Adds the vault to the list of accounts to ignore for the total supply.
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
-    function allocate(address vault, uint256 amount) external onlyEVCAccountOwner onlyOwner {
-        if (IEVault(vault).EVC() != address(evc)) {
-            revert E_NotEVCCompatible();
-        }
+    /// @notice Deposit cash from this contract into the specified ERC4626 vault.
+    /// @param vault The ERC4626-compliant vault to deposit into.
+    /// @param amount The amount of cash to deposit.
+    function allocate(address vault, uint256 amount) external onlyOwner {
         ignoredForTotalSupply.add(vault);
         allocations[vault] += amount;
 
-        _approve(address(this), vault, amount, true);
-        IEVault(vault).deposit(amount, address(this));
+        _approve(address(this), vault, amount);
+        IERC4626(vault).deposit(amount, address(this));
     }
 
     /// @notice Withdraw cash from the attached vault to this contract.
     /// @param vault The vault to withdraw the cash from.
     /// @param amount The amount of cash to withdraw.
-    function deallocate(address vault, uint256 amount) external onlyEVCAccountOwner onlyOwner {
+    /// @notice Withdraw cash from the specified ERC4626 vault back to this contract.
+    /// @param vault The ERC4626-compliant vault to withdraw from.
+    /// @param amount The amount of cash to withdraw.
+    function deallocate(address vault, uint256 amount) external onlyOwner {
         allocations[vault] -= amount;
 
-        IEVault(vault).withdraw(amount, address(this), address(this));
+        IERC4626(vault).withdraw(amount, address(this), address(this));
     }
 
-    function accumulatedInterest(IEVault esynthVault) external view returns (uint256) {
-        uint256 currentShares = esynthVault.balanceOf(address(this));
+    /// @notice Returns accumulated interest in the specified ERC4626 vault.
+    /// @param vault The ERC4626-compliant vault to query.
+    function accumulatedInterest(address vault) external view returns (uint256) {
+        uint256 currentShares = IERC4626(vault).balanceOf(address(this));
 
         require(currentShares > 0, "No shares in the vault");
 
-        uint256 underlyingBalance = esynthVault.convertToAssets(currentShares);
-        uint256 allocatedAmount = allocations[address(esynthVault)];
+        uint256 underlyingBalance = IERC4626(vault).convertToAssets(currentShares);
+        uint256 allocatedAmount = allocations[vault];
 
         return underlyingBalance > allocatedAmount ? underlyingBalance - allocatedAmount : 0;
     }
 
-    function withdrawInterest(uint256 interestToWithdraw, IEVault esynthVault) internal returns (uint256) {
-        uint256 maxInterestToWithdraw = this.accumulatedInterest(esynthVault);
+    function withdrawInterest(uint256 interestToWithdraw, address vault) internal returns (uint256) {
+        uint256 maxInterestToWithdraw = this.accumulatedInterest(vault);
 
         require(interestToWithdraw <= maxInterestToWithdraw, "Can't withdraw more than accumulated interest");
 
-        esynthVault.withdraw(interestToWithdraw, address(this), address(this));
+        IERC4626(vault).withdraw(interestToWithdraw, address(this), address(this));
 
         return interestToWithdraw;
     }
 
-    function depositInterestInDSR(uint256 interestToWithdraw, IEVault vault, address feesReceiver) external onlyOwner {
-        require(allocations[address(vault)] > 0, "No allocations for the vault");
+    function depositInterestInDSR(uint256 interestToWithdraw, address vault, address feesReceiver) external onlyOwner {
+        require(allocations[vault] > 0, "No allocations for the vault");
 
         uint256 interestWithdrawn = withdrawInterest(interestToWithdraw, vault);
         if (interestWithdrawn == 0) {
@@ -191,28 +192,20 @@ contract nUSD is ERC20EVCCompatible, Ownable {
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
     /// @return msgSender The address of the message sender.
-    function _msgSender() internal view virtual override(ERC20EVCCompatible, Context) returns (address msgSender) {
-        return ERC20EVCCompatible._msgSender();
-    }
 
     // -------- TotalSupply Management --------
 
     /// @notice Adds an account to the list of accounts to ignore for the total supply.
     /// @param account The account to add to the list.
     /// @return success True when the account was not on the list and was added. False otherwise.
-    function addIgnoredForTotalSupply(address account) external onlyEVCAccountOwner onlyOwner returns (bool success) {
+    function addIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
         return ignoredForTotalSupply.add(account);
     }
 
     /// @notice Removes an account from the list of accounts to ignore for the total supply.
     /// @param account The account to remove from the list.
     /// @return success True when the account was on the list and was removed. False otherwise.
-    function removeIgnoredForTotalSupply(address account)
-        external
-        onlyEVCAccountOwner
-        onlyOwner
-        returns (bool success)
-    {
+    function removeIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
         return ignoredForTotalSupply.remove(account);
     }
 
@@ -240,18 +233,5 @@ contract nUSD is ERC20EVCCompatible, Ownable {
             total -= balanceOf(ignoredForTotalSupply.at(i));
         }
         return total;
-    }
-
-    /// @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be
-    /// called by the current owner.
-    /// NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is
-    /// only available to the owner.
-    function renounceOwnership() public virtual override onlyEVCAccountOwner {
-        super.renounceOwnership();
-    }
-
-    /// @dev Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.
-    function transferOwnership(address newOwner) public virtual override onlyEVCAccountOwner {
-        super.transferOwnership(newOwner);
     }
 }

@@ -7,8 +7,6 @@ import {Test} from "forge-std/Test.sol";
 import {EVaultTestBase} from "../lib/euler-vault-kit/test/unit/evault/EVaultTestBase.t.sol";
 import {MockWrongEVC} from "../lib/euler-vault-kit/test/mocks/MockWrongEVC.sol";
 
-import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
 import {Errors} from "euler-vault-kit/EVault/shared/Errors.sol";
 
 import {nUSD} from "../src/nUSD.sol";
@@ -28,7 +26,7 @@ contract nUSDGeneralTest is EVaultTestBase {
     function setUp() public override {
         super.setUp();
 
-        nusd = nUSD(address(new nUSD(address(evc), "Euler Synth USD", "nUSD")));
+        nusd = new nUSD("Euler Synth USD", "nUSD");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
 
@@ -144,53 +142,20 @@ contract nUSDGeneralTest is EVaultTestBase {
         nusd.deallocate(address(eTST), amount);
     }
 
-    function test_AllocateInCompatibleVault() public {
-        uint256 amount = 100e18;
-        nusd.setCapacity(address(this), MAX_ALLOWED);
-        nusd.mint(address(nusd), amount);
-        vm.expectRevert(nUSD.E_NotEVCCompatible.selector);
-        nusd.allocate(address(wrongEVC), amount);
-    }
-
-    function test_GovernanceModifiers(address owner, uint8 id, address nonOwner, uint128 amount) public {
-        vm.assume(owner != address(0) && owner != address(evc));
-        vm.assume(!evc.haveCommonOwner(owner, nonOwner) && nonOwner != address(evc));
-        vm.assume(id != 0);
+    function test_GovernanceModifiers(address owner, address nonOwner, uint128 amount) public {
+        vm.assume(owner != address(0) && owner != nonOwner);
 
         vm.prank(owner);
-        nusd = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
+        nusd = new nUSD("Test Synth", "TST");
 
-        // succeeds if called directly by an owner
+        // succeeds if called directly by the owner
         vm.prank(owner);
         nusd.setCapacity(address(this), amount);
 
         // fails if called by a non-owner
         vm.prank(nonOwner);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
         nusd.setCapacity(address(this), amount);
-
-        // succeeds if called by an owner through the EVC
-        vm.prank(owner);
-        evc.call(address(nusd), owner, 0, abi.encodeCall(nusd.setCapacity, (address(this), amount)));
-
-        // fails if called by non-owner through the EVC
-        vm.prank(nonOwner);
-        vm.expectRevert();
-        evc.call(address(nusd), nonOwner, 0, abi.encodeCall(nusd.setCapacity, (address(this), amount)));
-
-        // fails if called by a sub-account of an owner through the EVC
-        vm.prank(owner);
-        vm.expectRevert();
-        evc.call(
-            address(nusd), address(uint160(owner) ^ id), 0, abi.encodeCall(nusd.setCapacity, (address(this), amount))
-        );
-
-        // fails if called by the owner operator through the EVC
-        vm.prank(owner);
-        evc.setAccountOperator(owner, nonOwner, true);
-        vm.prank(nonOwner);
-        vm.expectRevert();
-        evc.call(address(nusd), owner, 0, abi.encodeCall(nusd.setCapacity, (address(this), amount)));
     }
 
     function test_RenounceTransferOwnership() public {
@@ -199,7 +164,7 @@ contract nUSDGeneralTest is EVaultTestBase {
         address OWNER3 = makeAddr("OWNER3");
 
         vm.prank(OWNER);
-        nusd = nUSD(address(new nUSD(address(evc), "Test Synth", "TST")));
+        nusd = new nUSD("Test Synth", "TST");
         assertEq(nusd.owner(), OWNER);
 
         vm.prank(OWNER2);

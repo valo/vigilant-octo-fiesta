@@ -1,0 +1,13 @@
+# Codex configuration: limit modifications to root, src/, test/, and script/ only
+paths:
+  include:
+    - "."
+    - "src"
+    - "test"
+    - "script"
+  exclude:
+    - "lib/**"
+    - "docs/**"
+    - "cache/**"
+    - "out/**"
+    - "node_modules/**"

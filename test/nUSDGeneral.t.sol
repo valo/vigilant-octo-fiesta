@@ -26,7 +26,7 @@ contract nUSDGeneralTest is EVaultTestBase {
     function setUp() public override {
         super.setUp();
 
-        nusd = new nUSD("Euler Synth USD", "nUSD");
+        nusd = new nUSD(address(this), "Euler Synth USD", "nUSD");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
 
@@ -37,6 +37,7 @@ contract nUSDGeneralTest is EVaultTestBase {
         amount = uint128(bound(amount, 0, MAX_ALLOWED));
         uint256 balanceBefore = nusd.balanceOf(user1);
         uint256 totalSupplyBefore = nusd.totalSupply();
+        nusd.grantRole(nusd.MINTER_ROLE(), address(this));
         nusd.setCapacity(address(this), MAX_ALLOWED);
 
         nusd.mint(user1, amount);
@@ -46,6 +47,7 @@ contract nUSDGeneralTest is EVaultTestBase {
 
     function testFuzz_burnShouldDecreaseTotalSupplyAndBalance(uint128 initialAmount, uint128 burnAmount) public {
         initialAmount = uint128(bound(initialAmount, 1, MAX_ALLOWED));
+        nusd.grantRole(nusd.MINTER_ROLE(), address(this));
         nusd.setCapacity(address(this), MAX_ALLOWED);
         nusd.mint(user1, initialAmount);
         burnAmount = uint128(bound(burnAmount, 1, initialAmount));
@@ -77,6 +79,7 @@ contract nUSDGeneralTest is EVaultTestBase {
         capacity = uint128(bound(capacity, 0, MAX_ALLOWED));
         amount = uint128(bound(amount, 0, MAX_ALLOWED));
         vm.assume(capacity < amount);
+        nusd.grantRole(nusd.MINTER_ROLE(), address(this));
         nusd.setCapacity(address(this), capacity);
         vm.expectRevert(nUSD.E_CapacityReached.selector);
         nusd.mint(user1, amount);
@@ -86,11 +89,13 @@ contract nUSDGeneralTest is EVaultTestBase {
     function testFuzz_burnMoreThanMinted(uint128 amount) public {
         amount = uint128(bound(amount, 0, MAX_ALLOWED / 2));
         // one minter mints
+        nusd.grantRole(nusd.MINTER_ROLE(), user2);
         nusd.setCapacity(user2, amount); // we set the cap to less then
         vm.prank(user2);
         nusd.mint(address(nusd), amount);
 
         // another minter mints
+        nusd.grantRole(nusd.MINTER_ROLE(), user1);
         nusd.setCapacity(user1, amount); // we set the cap to less then
         vm.prank(user1);
         nusd.mint(address(nusd), amount);
@@ -104,6 +109,7 @@ contract nUSDGeneralTest is EVaultTestBase {
 
     function testFuzz_burnFromOwner(uint128 amount) public {
         amount = uint128(bound(amount, 1, MAX_ALLOWED));
+        nusd.grantRole(nusd.MINTER_ROLE(), user1);
         nusd.setCapacity(user1, MAX_ALLOWED);
         vm.prank(user1);
         nusd.mint(user1, amount);
@@ -121,6 +127,8 @@ contract nUSDGeneralTest is EVaultTestBase {
 
     function testFuzz_depositSimple(uint128 amount) public {
         amount = uint128(bound(amount, 1, type(uint112).max)); // amount needs to be less then MAX_SANE_AMOUNT
+        nusd.grantRole(nusd.MINTER_ROLE(), address(this));
+        nusd.grantRole(nusd.ALLOCATOR_ROLE(), address(this));
         nusd.setCapacity(address(this), MAX_ALLOWED);
         nusd.mint(address(nusd), amount); // address(this) should be owner
         nusd.allocate(address(eTST), amount);
@@ -128,6 +136,8 @@ contract nUSDGeneralTest is EVaultTestBase {
 
     function testFuzz_depositTooLarge(uint128 amount) public {
         amount = uint128(bound(amount, uint256(type(uint112).max) + 1, MAX_ALLOWED));
+        nusd.grantRole(nusd.MINTER_ROLE(), address(this));
+        nusd.grantRole(nusd.ALLOCATOR_ROLE(), address(this));
         nusd.setCapacity(address(this), MAX_ALLOWED);
         nusd.mint(address(nusd), amount);
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
@@ -136,11 +146,11 @@ contract nUSDGeneralTest is EVaultTestBase {
 
     function testFuzz_withdrawSimple(uint128 amount) public {
         amount = uint128(bound(amount, 1, type(uint112).max));
+        nusd.grantRole(nusd.MINTER_ROLE(), address(this));
+        nusd.grantRole(nusd.ALLOCATOR_ROLE(), address(this));
         nusd.setCapacity(address(this), MAX_ALLOWED);
         nusd.mint(address(nusd), amount);
         nusd.allocate(address(eTST), amount);
         nusd.deallocate(address(eTST), amount);
     }
-
-
 }

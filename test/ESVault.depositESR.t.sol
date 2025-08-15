@@ -30,7 +30,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
     function setUp() public virtual override {
         super.setUp();
 
-        assetTSTAsSynth = new nUSD("Test Synth", "TST");
+        assetTSTAsSynth = new nUSD(address(this), "Test Synth", "TST");
         assetTST = TestERC20(address(assetTSTAsSynth));
         eTST = createSynthEVault(address(assetTSTAsSynth));
         eTST.setInterestRateModel(address(new IRMTestFixed()));
@@ -39,6 +39,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
         DSR = new SavingsRateModule(IERC20(address(assetTST)), "Savings Vault", "SV", 2 weeks);
 
+        assetTSTAsSynth.grantRole(assetTSTAsSynth.MINTER_ROLE(), address(this));
         assetTSTAsSynth.setCapacity(address(this), MAX_MINT_AMOUNT);
         assetTSTAsSynth.setInterestFee(0.1e4);
         assetTSTAsSynth.setDsrVault(DSR);
@@ -77,6 +78,7 @@ contract ESVaultTestAllocate is EVaultTestBase {
     function testFuzz_allocate_from_synth(uint256 vaultCap) public {
         vm.assume(vaultCap > 0 && vaultCap <= MAX_MINT_AMOUNT);
 
+        assetTSTAsSynth.grantRole(assetTSTAsSynth.ALLOCATOR_ROLE(), address(this));
         assetTSTAsSynth.allocate(address(eTST), vaultCap);
 
         assertEq(assetTST.balanceOf(address(eTST)), vaultCap);
@@ -85,6 +87,8 @@ contract ESVaultTestAllocate is EVaultTestBase {
 
     function testFuzz_accumulate_interest(uint256 vaultCap, uint256 borrowAmount) public {
         vm.assume(vaultCap > 0 && vaultCap <= MAX_MINT_AMOUNT && borrowAmount < vaultCap);
+        assetTSTAsSynth.grantRole(assetTSTAsSynth.ALLOCATOR_ROLE(), address(this));
+        assetTSTAsSynth.grantRole(assetTSTAsSynth.KEEPER_ROLE(), address(this));
         assetTSTAsSynth.allocate(address(eTST), vaultCap);
 
         startHoax(borrower);

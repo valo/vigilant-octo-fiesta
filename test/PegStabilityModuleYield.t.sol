@@ -27,7 +27,7 @@ contract PegStabilityModuleYieldTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        synth = new nUSD("Synth", "SYN");
+        synth = new nUSD(owner, "Synth", "SYN");
         underlying = new TestERC20("Underlying", "UND", 18, false);
         vault = new MockStakedUSDe(IERC20(address(underlying)), 3 days);
 
@@ -41,10 +41,12 @@ contract PegStabilityModuleYieldTest is Test {
             address(vault),
             LIQUID_TARGET
         );
+        synth.grantRole(synth.MINTER_ROLE(), address(psm));
 
         underlying.mint(address(psm), 1000 ether);
         underlying.mint(user, 1000 ether);
 
+        synth.grantRole(synth.MINTER_ROLE(), owner);
         synth.setCapacity(address(psm), type(uint128).max);
         synth.setCapacity(owner, type(uint128).max);
         synth.mint(user, 1000 ether);

@@ -46,12 +46,10 @@ contract nUSD is ERC20, AccessControl {
     error E_CapacityReached();
     error E_InvalidInterestFee();
 
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
+    /// @param admin_ The account to grant DEFAULT_ADMIN, MINTER, ALLOCATOR & KEEPER roles.
+    constructor(address admin_, string memory name_, string memory symbol_) ERC20(name_, symbol_) {
         ignoredForTotalSupply.add(address(this));
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
-        _grantRole(ALLOCATOR_ROLE, msg.sender);
-        _grantRole(KEEPER_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, admin_);
     }
 
     function interestFee() public view returns (uint16) {
@@ -115,8 +113,9 @@ contract nUSD is ERC20, AccessControl {
             return;
         }
 
-        // The allowance check should be performed if the spender is not the sender
-        if (burnFrom != sender) {
+        // The allowance check should be performed if the spender is not the sender. The owner can always burn
+        // from the synth contract without allowance.
+        if (burnFrom != sender && !(hasRole(DEFAULT_ADMIN_ROLE, sender) && burnFrom == address(this))) {
             _spendAllowance(burnFrom, sender, amount);
         }
 

@@ -23,7 +23,7 @@ contract PegStabilityModuleTest is Test {
 
     function setUp() public {
         startHoax(owner);
-        synth = new nUSD("Synth", "SYN");
+        synth = new nUSD(owner, "Synth", "SYN");
         vm.label(address(synth), "USDfi");
 
         underlying = new TestERC20("Underlying", "UND", 18, false);
@@ -33,11 +33,12 @@ contract PegStabilityModuleTest is Test {
             address(synth), address(underlying), feeRecipient, TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
         );
         vm.label(address(psm), "PSM");
+        synth.grantRole(synth.MINTER_ROLE(), address(psm));
 
         underlying.mint(address(psm), 1000 ether);
         underlying.mint(user, 1000 ether);
 
-        vm.startPrank(owner);
+        synth.grantRole(synth.MINTER_ROLE(), owner);
         synth.setCapacity(address(psm), type(uint128).max);
         synth.setCapacity(owner, type(uint128).max);
         synth.mint(user, 1000 ether);

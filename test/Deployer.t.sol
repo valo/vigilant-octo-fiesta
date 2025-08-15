@@ -13,7 +13,7 @@ contract DeployerTest is Test {
     function setUp() public {
         // Deploy Deployer under a specific admin
         vm.prank(admin);
-        deployer = new Deployer();
+        deployer = new Deployer(admin);
     }
 
     function testDeployDeterministicAndAdmin() public {
@@ -25,10 +25,8 @@ contract DeployerTest is Test {
         vm.prank(admin);
         address deployed = deployer.deploy(creation, salt);
 
-        // Compute expected CREATE2 address
-        bytes32 codeHash = keccak256(creation);
-        address expected =
-            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(deployer), salt, codeHash)))));
+        // Both direct formula and computeAddress() should match
+        address expected = deployer.computeAddress(creation, salt);
         assertEq(deployed, expected, "CREATE2 address mismatch");
 
         // The deployed nUSD should grant DEFAULT_ADMIN_ROLE to the deployer

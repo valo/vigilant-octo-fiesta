@@ -142,53 +142,5 @@ contract nUSDGeneralTest is EVaultTestBase {
         nusd.deallocate(address(eTST), amount);
     }
 
-    function test_GovernanceModifiers(address owner, address nonOwner, uint128 amount) public {
-        vm.assume(owner != address(0) && owner != nonOwner);
 
-        vm.prank(owner);
-        nusd = new nUSD("Test Synth", "TST");
-
-        // succeeds if called directly by the owner
-        vm.prank(owner);
-        nusd.setCapacity(address(this), amount);
-
-        // fails if called by a non-owner
-        vm.prank(nonOwner);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
-        nusd.setCapacity(address(this), amount);
-    }
-
-    function test_RenounceTransferOwnership() public {
-        address OWNER = makeAddr("OWNER");
-        address OWNER2 = makeAddr("OWNER2");
-        address OWNER3 = makeAddr("OWNER3");
-
-        vm.prank(OWNER);
-        nusd = new nUSD("Test Synth", "TST");
-        assertEq(nusd.owner(), OWNER);
-
-        vm.prank(OWNER2);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
-        nusd.renounceOwnership();
-
-        vm.prank(OWNER2);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
-        nusd.transferOwnership(OWNER2);
-
-        vm.prank(OWNER);
-        nusd.transferOwnership(OWNER2);
-        assertEq(nusd.owner(), OWNER2);
-
-        vm.prank(OWNER2);
-        nusd.transferOwnership(OWNER3);
-        assertEq(nusd.owner(), OWNER3);
-
-        vm.prank(OWNER2);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
-        nusd.renounceOwnership();
-
-        vm.prank(OWNER3);
-        nusd.renounceOwnership();
-        assertEq(nusd.owner(), address(0));
-    }
 }

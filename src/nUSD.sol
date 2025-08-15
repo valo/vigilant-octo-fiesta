@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
 import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {AccessControl} from "openzeppelin-contracts/access/AccessControl.sol";
 import {SavingsRateModule} from "./SavingsRateModule.sol";
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 
@@ -11,8 +11,15 @@ import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 /// @author Valentin Mihov (valentin.mihpv@gmail.com)
 /// @notice A syntetix USD token which is backed by over collateralized assets.
 // SPDX-License-Identifier: GPL-2.0-or-later
-contract nUSD is ERC20, Ownable {
+contract nUSD is ERC20, AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
+
+    /// @dev Role identifier for accounts that can mint new tokens.
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Role identifier for accounts that can allocate funds to vaults.
+    bytes32 public constant ALLOCATOR_ROLE = keccak256("ALLOCATOR_ROLE");
+    /// @dev Role identifier for accounts that can trigger interest deposits into DSR.
+    bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
 
     SavingsRateModule public dsrVault;
     mapping(address => uint256) public allocations;
@@ -39,22 +46,26 @@ contract nUSD is ERC20, Ownable {
     error E_CapacityReached();
     error E_InvalidInterestFee();
 
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) Ownable(msg.sender) {
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
         ignoredForTotalSupply.add(address(this));
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(ALLOCATOR_ROLE, msg.sender);
+        _grantRole(KEEPER_ROLE, msg.sender);
     }
 
     function interestFee() public view returns (uint16) {
         return _interestFee;
     }
 
-    function setInterestFee(uint16 interestFee_) external onlyOwner {
+    function setInterestFee(uint16 interestFee_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (interestFee_ > MAX_INTEREST_FEE) {
             revert E_InvalidInterestFee();
         }
         _interestFee = interestFee_;
     }
 
-    function setDsrVault(SavingsRateModule dsrVault_) external onlyOwner {
+    function setDsrVault(SavingsRateModule dsrVault_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         dsrVault = dsrVault_;
     }
 
@@ -62,7 +73,7 @@ contract nUSD is ERC20, Ownable {
     /// @dev Can only be called by the owner of the contract.
     /// @param minter The address of the minter to set the capacity for.
     /// @param capacity The capacity to set for the minter.
-    function setCapacity(address minter, uint128 capacity) external onlyOwner {
+    function setCapacity(address minter, uint128 capacity) external onlyRole(DEFAULT_ADMIN_ROLE) {
         minters[minter].capacity = capacity;
         emit MinterCapacitySet(minter, capacity);
     }
@@ -70,7 +81,7 @@ contract nUSD is ERC20, Ownable {
     /// @notice Mints a certain amount of tokens to the account.
     /// @param account The account to mint the tokens to.
     /// @param amount The amount of tokens to mint.
-    function mint(address account, uint256 amount) external {
+    function mint(address account, uint256 amount) external onlyRole(MINTER_ROLE) {
         address sender = _msgSender();
         MinterData memory minterCache = minters[sender];
 
@@ -104,9 +115,8 @@ contract nUSD is ERC20, Ownable {
             return;
         }
 
-        // The allowance check should be performed if the spender is not the account with the exception of the owner
-        // burning from this contract.
-        if (burnFrom != sender && !(burnFrom == address(this) && sender == owner())) {
+        // The allowance check should be performed if the spender is not the sender
+        if (burnFrom != sender) {
             _spendAllowance(burnFrom, sender, amount);
         }
 
@@ -127,7 +137,7 @@ contract nUSD is ERC20, Ownable {
     /// @notice Deposit cash from this contract into the specified ERC4626 vault.
     /// @param vault The ERC4626-compliant vault to deposit into.
     /// @param amount The amount of cash to deposit.
-    function allocate(address vault, uint256 amount) external onlyOwner {
+    function allocate(address vault, uint256 amount) external onlyRole(ALLOCATOR_ROLE) {
         ignoredForTotalSupply.add(vault);
         allocations[vault] += amount;
 
@@ -141,7 +151,7 @@ contract nUSD is ERC20, Ownable {
     /// @notice Withdraw cash from the specified ERC4626 vault back to this contract.
     /// @param vault The ERC4626-compliant vault to withdraw from.
     /// @param amount The amount of cash to withdraw.
-    function deallocate(address vault, uint256 amount) external onlyOwner {
+    function deallocate(address vault, uint256 amount) external onlyRole(ALLOCATOR_ROLE) {
         allocations[vault] -= amount;
 
         IERC4626(vault).withdraw(amount, address(this), address(this));
@@ -170,7 +180,10 @@ contract nUSD is ERC20, Ownable {
         return interestToWithdraw;
     }
 
-    function depositInterestInDSR(uint256 interestToWithdraw, address vault, address feesReceiver) external onlyOwner {
+    function depositInterestInDSR(uint256 interestToWithdraw, address vault, address feesReceiver)
+        external
+        onlyRole(KEEPER_ROLE)
+    {
         require(allocations[vault] > 0, "No allocations for the vault");
 
         uint256 interestWithdrawn = withdrawInterest(interestToWithdraw, vault);
@@ -198,14 +211,18 @@ contract nUSD is ERC20, Ownable {
     /// @notice Adds an account to the list of accounts to ignore for the total supply.
     /// @param account The account to add to the list.
     /// @return success True when the account was not on the list and was added. False otherwise.
-    function addIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
+    function addIgnoredForTotalSupply(address account) external onlyRole(DEFAULT_ADMIN_ROLE) returns (bool success) {
         return ignoredForTotalSupply.add(account);
     }
 
     /// @notice Removes an account from the list of accounts to ignore for the total supply.
     /// @param account The account to remove from the list.
     /// @return success True when the account was on the list and was removed. False otherwise.
-    function removeIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
+    function removeIgnoredForTotalSupply(address account)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        returns (bool success)
+    {
         return ignoredForTotalSupply.remove(account);
     }
 

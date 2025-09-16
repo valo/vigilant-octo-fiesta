@@ -32,6 +32,7 @@ contract PegStabilityModuleYieldTest is Test {
         vault = new MockStakedUSDe(IERC20(address(underlying)), 3 days);
 
         psm = new PegStabilityModuleYield(
+            owner,
             address(synth),
             address(underlying),
             feeRecipient,

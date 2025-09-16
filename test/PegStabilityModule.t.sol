@@ -8,7 +8,7 @@ import {nUSD} from "../src/nUSD.sol";
 import {TestERC20} from "../lib/euler-vault-kit/test/mocks/TestERC20.sol";
 
 contract PegStabilityModuleTest is Test {
-    uint256 constant CONVERSION_PRICE = 1e18;
+    uint256 constant CONVERSION_PRICE = 1e18; // 1:1 price
     uint256 constant TO_UNDERLYING_FEE = 100; // 1%
     uint256 constant TO_SYNTH_FEE = 50; // 0.5%
 
@@ -26,17 +26,18 @@ contract PegStabilityModuleTest is Test {
         synth = new nUSD(owner, "Synth", "SYN");
         vm.label(address(synth), "USDfi");
 
-        underlying = new TestERC20("Underlying", "UND", 18, false);
+        // Note: the underlying has 6 decimals
+        underlying = new TestERC20("Underlying", "UND", 6, false);
         vm.label(address(underlying), "Underlying");
 
         psm = new PegStabilityModule(
-            address(synth), address(underlying), feeRecipient, TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
+            owner, address(synth), address(underlying), feeRecipient, TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
         );
         vm.label(address(psm), "PSM");
         synth.grantRole(synth.MINTER_ROLE(), address(psm));
 
-        underlying.mint(address(psm), 1000 ether);
-        underlying.mint(user, 1000 ether);
+        underlying.mint(address(psm), 1000 * 1e6); // Fund the PSM with some underlying
+        underlying.mint(user, 1000 * 1e6);
 
         synth.grantRole(synth.MINTER_ROLE(), owner);
         synth.setCapacity(address(psm), type(uint128).max);
@@ -51,9 +52,9 @@ contract PegStabilityModuleTest is Test {
     }
 
     function testFuzz_swapToUnderlyingFunnelFee(uint96 amountIn) public {
-        amountIn = uint96(bound(amountIn, 1e18, synth.balanceOf(user)));
+        amountIn = uint96(bound(amountIn, 1, synth.balanceOf(user)));
         uint256 expectedOut = psm.quoteToUnderlyingGivenIn(amountIn);
-        uint256 totalUnderlying = (amountIn * CONVERSION_PRICE) / psm.PRICE_SCALE();
+        uint256 totalUnderlying = _denormalize((amountIn * CONVERSION_PRICE) / psm.PRICE_SCALE());
         uint256 fee = totalUnderlying - expectedOut;
 
         startHoax(user);
@@ -64,10 +65,10 @@ contract PegStabilityModuleTest is Test {
     }
 
     function testFuzz_swapToSynthFunnelFee(uint96 amountIn) public {
-        amountIn = uint96(bound(amountIn, 1e18, underlying.balanceOf(user)));
+        amountIn = uint96(bound(amountIn, 1, underlying.balanceOf(user)));
         uint256 expectedOut = psm.quoteToSynthGivenIn(amountIn);
-        uint256 mintedUnderlying = (expectedOut * psm.PRICE_SCALE()) / CONVERSION_PRICE;
-        uint256 fee = amountIn - mintedUnderlying; // 1:1 price
+        uint256 mintedUnderlying = _denormalize((expectedOut * CONVERSION_PRICE) / psm.PRICE_SCALE());
+        uint256 fee = amountIn - mintedUnderlying;
 
         startHoax(user);
         psm.swapToSynthGivenIn(amountIn, receiver);
@@ -81,8 +82,8 @@ contract PegStabilityModuleTest is Test {
         amountOut = uint96(bound(amountOut, 1e18, maxOut));
 
         uint256 expectedIn = psm.quoteToSynthGivenOut(amountOut);
-        uint256 totalUnderlying = (expectedIn * psm.PRICE_SCALE()) / CONVERSION_PRICE;
-        uint256 fee = totalUnderlying - amountOut;
+        uint256 mintedUnderlying = _denormalize((amountOut * CONVERSION_PRICE) / psm.PRICE_SCALE());
+        uint256 fee = expectedIn - mintedUnderlying;
 
         startHoax(user);
         uint256 actualIn = psm.swapToSynthGivenOut(amountOut, receiver);
@@ -94,10 +95,15 @@ contract PegStabilityModuleTest is Test {
 
     function testFuzz_swapToUnderlyingGivenOut(uint96 amountOut) public {
         uint256 maxOut = psm.quoteToUnderlyingGivenIn(synth.balanceOf(user));
-        amountOut = uint96(bound(amountOut, 1e18, maxOut));
+        uint256 minOut = 10 ** uint256(underlying.decimals());
+        if (maxOut < minOut) {
+            amountOut = uint96(maxOut);
+        } else {
+            amountOut = uint96(bound(amountOut, minOut, maxOut));
+        }
 
         uint256 expectedIn = psm.quoteToUnderlyingGivenOut(amountOut);
-        uint256 totalUnderlying = (expectedIn * CONVERSION_PRICE) / psm.PRICE_SCALE();
+        uint256 totalUnderlying = _denormalize((expectedIn * CONVERSION_PRICE) / psm.PRICE_SCALE());
         uint256 fee = totalUnderlying - amountOut;
 
         startHoax(user);
@@ -116,5 +122,28 @@ contract PegStabilityModuleTest is Test {
 
         assertEq(psm.toUnderlyingFeeBPS(), uFee);
         assertEq(psm.toSynthFeeBPS(), sFee);
+    }
+
+    function test_constructor_rejectsUnderlyingWithMoreThan18Decimals() public {
+        TestERC20 highPrecisionUnderlying = new TestERC20("High", "HIGH", 19, false);
+
+        vm.expectRevert(PegStabilityModule.E_UnsupportedDecimals.selector);
+        new PegStabilityModule(
+            owner,
+            address(synth),
+            address(highPrecisionUnderlying),
+            feeRecipient,
+            TO_UNDERLYING_FEE,
+            TO_SYNTH_FEE,
+            CONVERSION_PRICE
+        );
+    }
+
+    function _denormalize(uint256 amount) internal view returns (uint256) {
+        uint8 decimals = underlying.decimals();
+        if (decimals < 18) {
+            return amount / 10 ** uint256(18 - decimals);
+        }
+        return amount;
     }
 }

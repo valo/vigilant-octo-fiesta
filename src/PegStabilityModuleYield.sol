@@ -26,6 +26,7 @@ contract PegStabilityModuleYield is PegStabilityModule {
     /// @param _stakingVault address of the staking vault to deposit unused underlying
     /// @param _liquidTarget amount of underlying to keep liquid
     constructor(
+        address _owner,
         address _synth,
         address _underlying,
         address _feeRecipient,
@@ -34,7 +35,17 @@ contract PegStabilityModuleYield is PegStabilityModule {
         uint256 _conversionPrice,
         address _stakingVault,
         uint256 _liquidTarget
-    ) PegStabilityModule(_synth, _underlying, _feeRecipient, _toUnderlyingFeeBPS, _toSynthFeeBPS, _conversionPrice) {
+    )
+        PegStabilityModule(
+            _owner,
+            _synth,
+            _underlying,
+            _feeRecipient,
+            _toUnderlyingFeeBPS,
+            _toSynthFeeBPS,
+            _conversionPrice
+        )
+    {
         if (_stakingVault == address(0)) revert E_ZeroAddress();
         stakingVault = IStakedUSDeCooldown(_stakingVault);
         liquidTarget = _liquidTarget;

@@ -9,12 +9,12 @@ import {PegStabilityModule} from "../src/PegStabilityModule.sol";
 /// @title DeployPSM
 /// @notice Script to deploy the PSM contract with a Gnosis Safe owner.
 contract DeployPSM is Script, CreateXScript {
-    address public feeRecipient;
+    address public mainGnosisSafe;
     address public underlying;
     address public synth;
 
     function setUp() public withCreateX {
-        feeRecipient = vm.envAddress("GNOSIS_SAFE_ADMIN");
+        mainGnosisSafe = vm.envAddress("GNOSIS_SAFE_ADMIN");
         underlying = vm.envAddress("USDC_ADDRESS");
         synth = vm.envAddress("SYNTH_ADDRESS");
     }
@@ -27,13 +27,14 @@ contract DeployPSM is Script, CreateXScript {
         console2.log("Deployer:", deployer);
 
         // Prepare the salt
-        bytes32 salt = bytes32(abi.encodePacked(deployer, hex"00", bytes11(keccak256("PSM Deployment"))));
+        bytes32 salt = bytes32(abi.encodePacked(deployer, hex"00", bytes11(keccak256("PSM/USDC Deployment"))));
         bytes memory encodedParams = abi.encode(
+            mainGnosisSafe,
             synth,
             underlying,
-            feeRecipient,
-            1, // 0.1% to underlying fee
-            1, // 0.1% to synth fee
+            mainGnosisSafe,
+            10, // 0.1% to underlying fee
+            10, // 0.1% to synth fee
             1e18 // Conversion price 1:1
         );
         bytes memory initCode = abi.encodePacked(type(PegStabilityModule).creationCode, encodedParams);

@@ -1,0 +1,19 @@
+{
+	"dependencies": {
+		"@safe-global/api-kit": "^4.0.0",
+		"@safe-global/protocol-kit": "^6.1.1",
+		"abitype": "^1.1.0",
+		"dotenv": "^17.2.2",
+		"ethers": "^6.15.0",
+		"viem": "^2.37.6"
+	},
+	"scripts": {
+		"build": "tsc -p .",
+		"propose:psm-fees": "tsx src/propose-psm-fees.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^24.5.2",
+		"tsx": "^4.20.5",
+		"typescript": "^5.9.2"
+	}
+}

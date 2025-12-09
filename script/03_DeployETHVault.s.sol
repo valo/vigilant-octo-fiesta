@@ -4,27 +4,18 @@ pragma solidity ^0.8.20;
 import {Script, console2} from "forge-std/Script.sol";
 import {GenericFactory} from "euler-vault-kit/GenericFactory/GenericFactory.sol";
 import {IEVault} from "euler-vault-kit/EVault/IEVault.sol";
-import {HookTargetSynth} from "euler-vault-kit/Synths/HookTargetSynth.sol";
-import {IRMStabilityFee} from "../src/IRMStabilityFee.sol";
-import {
-    OP_DEPOSIT, OP_MINT, OP_REDEEM, OP_SKIM, OP_REPAY_WITH_SHARES
-} from "euler-vault-kit/EVault/shared/Constants.sol";
 import {EulerRouterFactory} from "evk-periphery/EulerRouterFactory/EulerRouterFactory.sol";
 import {EulerRouter} from "euler-price-oracle/EulerRouter.sol";
 import {ChainlinkOracle} from "euler-price-oracle/adapter/chainlink/ChainlinkOracle.sol";
-import {FixedRateOracle} from "euler-price-oracle/adapter/fixed/FixedRateOracle.sol";
 
-/// @title DeploySynthEVault
-/// @notice Deploys and configures an EVault for the nUSD synth with a HookTargetSynth gate and stability fee IRM.
-contract DeploySynthEVault is Script {
+/// @title DeployETHVault
+/// @notice Deploys an ETH-denominated EVault with a router-backed ETH/USDC oracle.
+contract DeployETHVault is Script {
     address public factory;
-    address public synthAsset;
     address public unitOfAccount;
     address public gnosisSafe;
     address public wethAddress;
     address public usdcAddress;
-    uint256 public initialStabilityRate;
-    address public nUSDVaultAddress;
     address public oracleRouterFactoryAddress;
     address public existingOracleRouter;
     address public ethUsdcChainlinkFeedAddress;
@@ -35,7 +26,6 @@ contract DeploySynthEVault is Script {
         gnosisSafe = vm.envAddress("GNOSIS_SAFE_ADMIN");
         oracleRouterFactoryAddress = vm.envAddress("EULER_ROUTER_FACTORY_ADDRESS");
         existingOracleRouter = vm.envOr("EULER_ORACLE_ROUTER_ADDRESS", address(0));
-        nUSDVaultAddress = vm.envAddress("NUSD_VAULT_ADDRESS");
         wethAddress = vm.envAddress("WETH_ADDRESS");
         usdcAddress = vm.envAddress("USDC_ADDRESS");
         ethUsdcChainlinkFeedAddress = vm.envAddress("ETH_USD_CHAINLINK_FEED_ADDRESS");
@@ -49,7 +39,6 @@ contract DeploySynthEVault is Script {
         console2.log("Using factory:", factory);
         console2.log("Unit of account (USDC):", unitOfAccount);
         console2.log("Gnosis Safe governor:", gnosisSafe);
-        console2.log("Initial stability fee rate:", initialStabilityRate);
 
         EulerRouter oracleRouter;
         if (existingOracleRouter != address(0)) {
@@ -89,7 +78,4 @@ contract DeploySynthEVault is Script {
 
         vm.stopBroadcast();
     }
-
-    // disable mint, redeem, skim and repayWithShares; restrict deposit to the synth contract
-    // uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_REPAY_WITH_SHARES;
 }

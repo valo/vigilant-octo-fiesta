@@ -73,7 +73,7 @@ contract DeployETHVault is Script {
         console2.log("Governor admin updated to:", gnosisSafe);
 
         console2.log("Run ops script to propose LTV on nUSD vault via Safe:");
-        console2.log("pnpm --dir ops run propose:ltv --", vaultAddress, "800 850 0");
+        console2.log("pnpm --dir ops run propose:ltv --", vaultAddress, "8000 8500 0");
 
         vm.stopBroadcast();
     }

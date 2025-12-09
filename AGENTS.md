@@ -10,6 +10,8 @@ This repository implements the Euler CDP protocol with Foundry. Follow the rules
 - `docs/` (including `DESIGN.md`) records rationale; update when behaviour or architecture shifts.
 - `lib/` contains vendored dependencies managed by Foundry.
 
+All the solidity dependencies are included as git submodules and no changes should be made in them.
+
 ## Build, Test & Development Commands
 - `forge build` compiles with solc 0.8.25 and verifies remappings.
 - `forge test` runs the suite; add `--match-contract PegStabilityModule` for focused runs.

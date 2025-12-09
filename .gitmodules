@@ -13,3 +13,9 @@
 [submodule "lib/createx-forge"]
 	path = lib/createx-forge
 	url = https://github.com/radeksvarz/createx-forge
+[submodule "lib/evk-periphery"]
+	path = lib/evk-periphery
+	url = https://github.com/euler-xyz/evk-periphery
+[submodule "lib/euler-price-oracle"]
+	path = lib/euler-price-oracle
+	url = https://github.com/euler-xyz/euler-price-oracle

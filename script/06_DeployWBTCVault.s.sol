@@ -8,17 +8,17 @@ import {EulerRouterFactory} from "evk-periphery/EulerRouterFactory/EulerRouterFa
 import {EulerRouter} from "euler-price-oracle/EulerRouter.sol";
 import {ChainlinkOracle} from "euler-price-oracle/adapter/chainlink/ChainlinkOracle.sol";
 
-/// @title DeployETHVault
-/// @notice Deploys an ETH-denominated EVault with a router-backed ETH/USDC oracle.
-contract DeployETHVault is Script {
+/// @title DeployWBTCVault
+/// @notice Deploys a WBTC EVault with a Chainlink BTC/USD oracle for collateral use only.
+contract DeployWBTCVault is Script {
     address public factory;
     address public unitOfAccount;
     address public gnosisSafe;
-    address public wethAddress;
+    address public wbtcAddress;
     address public usdcAddress;
     address public oracleRouterFactoryAddress;
     address public existingOracleRouter;
-    address public ethUsdcChainlinkFeedAddress;
+    address public btcUsdChainlinkFeedAddress;
 
     function setUp() public virtual {
         factory = vm.envAddress("EVK_FACTORY_ADDRESS");
@@ -26,9 +26,9 @@ contract DeployETHVault is Script {
         gnosisSafe = vm.envAddress("GNOSIS_SAFE_ADMIN");
         oracleRouterFactoryAddress = vm.envAddress("EULER_ROUTER_FACTORY_ADDRESS");
         existingOracleRouter = vm.envOr("EULER_ORACLE_ROUTER_ADDRESS", address(0));
-        wethAddress = vm.envAddress("WETH_ADDRESS");
+        wbtcAddress = vm.envAddress("WBTC_ADDRESS");
         usdcAddress = vm.envAddress("USDC_ADDRESS");
-        ethUsdcChainlinkFeedAddress = vm.envAddress("ETH_USD_CHAINLINK_FEED_ADDRESS");
+        btcUsdChainlinkFeedAddress = vm.envAddress("BTC_USD_CHAINLINK_FEED_ADDRESS");
     }
 
     function run() external {
@@ -39,6 +39,8 @@ contract DeployETHVault is Script {
         console2.log("Using factory:", factory);
         console2.log("Unit of account (USDC):", unitOfAccount);
         console2.log("Gnosis Safe governor:", gnosisSafe);
+        console2.log("WBTC asset:", wbtcAddress);
+        console2.log("BTC/USD Chainlink feed:", btcUsdChainlinkFeedAddress);
 
         EulerRouter oracleRouter;
         if (existingOracleRouter != address(0)) {
@@ -51,19 +53,19 @@ contract DeployETHVault is Script {
         }
 
         ChainlinkOracle priceOracle =
-            new ChainlinkOracle(wethAddress, usdcAddress, ethUsdcChainlinkFeedAddress, 60 minutes);
-        console2.log("Deployed ChainlinkOracle for ETH/USDC:", address(priceOracle));
-        oracleRouter.govSetConfig(wethAddress, usdcAddress, address(priceOracle));
+            new ChainlinkOracle(wbtcAddress, usdcAddress, btcUsdChainlinkFeedAddress, 60 minutes);
+        console2.log("Deployed ChainlinkOracle for BTC/USDC:", address(priceOracle));
+        oracleRouter.govSetConfig(wbtcAddress, usdcAddress, address(priceOracle));
 
-        console2.log("Current price of ETH in USDC:", oracleRouter.getQuote(1 ether, wethAddress, usdcAddress) / 1e6);
+        console2.log("Current price of BTC in USDC:", oracleRouter.getQuote(1e8, wbtcAddress, usdcAddress) / 1e6);
 
-        bytes memory trailingData = abi.encodePacked(wethAddress, address(oracleRouter), unitOfAccount);
+        bytes memory trailingData = abi.encodePacked(wbtcAddress, address(oracleRouter), unitOfAccount);
         console2.log("Proxy metadata:");
         console2.logBytes(trailingData);
 
         address vaultAddress = GenericFactory(factory).createProxy(address(0), true, trailingData);
         IEVault vault = IEVault(vaultAddress);
-        console2.log("ETH Vault deployed at:", vaultAddress);
+        console2.log("WBTC Vault deployed at:", vaultAddress);
 
         // Allow all operations on the vault and disable the hook
         vault.setHookConfig(address(0x0), 0);
@@ -73,7 +75,7 @@ contract DeployETHVault is Script {
         console2.log("Governor admin updated to:", gnosisSafe);
 
         console2.log("Run ops script to propose LTV on nUSD vault via Safe:");
-        console2.log("pnpm --dir ops run propose:ltv --", vaultAddress, "800 850 0");
+        console2.log("pnpm --dir ops run propose:ltv --", vaultAddress, "800 850 1800");
 
         vm.stopBroadcast();
     }

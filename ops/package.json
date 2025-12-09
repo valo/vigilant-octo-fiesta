@@ -9,7 +9,8 @@
 	},
 	"scripts": {
 		"build": "tsc -p .",
-		"propose:psm-fees": "tsx src/propose-psm-fees.ts"
+		"propose:psm-fees": "tsx src/propose-psm-fees.ts",
+		"propose:ltv": "tsx src/propose-ltv.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^24.5.2",

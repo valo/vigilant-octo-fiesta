@@ -9,8 +9,10 @@
 	},
 	"scripts": {
 		"build": "tsc -p .",
+		"propose:irm": "tsx src/propose-irm.ts",
 		"propose:psm-fees": "tsx src/propose-psm-fees.ts",
-		"propose:ltv": "tsx src/propose-ltv.ts"
+		"propose:ltv": "tsx src/propose-ltv.ts",
+		"propose:synth-collateral": "tsx src/propose-synth-collateral.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^24.5.2",

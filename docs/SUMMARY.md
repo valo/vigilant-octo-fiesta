@@ -1,0 +1,18 @@
+# Table of contents
+
+* [DIBOR Protocol](README.md)
+* [Summary](gitbook/SUMMARY.md)
+* [Overview](gitbook/overview.md)
+* [Vision & Long-Term Plan](gitbook/vision.md)
+* [Architecture](gitbook/architecture.md)
+* [Contracts](gitbook/contracts/README.md)
+  * [dfUSD](gitbook/contracts/dfusd.md)
+  * [Interest Rate Models (IRMs)](gitbook/contracts/interest-rate-models.md)
+  * [Peg Stability Module (PSM)](gitbook/contracts/psm.md)
+  * [Rebalancer](gitbook/contracts/rebalancer.md)
+  * [Savings Rate Module](gitbook/contracts/savings-rate-module.md)
+* [Governance & Ops](gitbook/governance.md)
+* [Deployment](gitbook/deployment.md)
+* [Contract Addresses](gitbook/addresses.md)
+* [Security](gitbook/security.md)
+* [Glossary](gitbook/glossary.md)

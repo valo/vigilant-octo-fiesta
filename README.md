@@ -13,6 +13,10 @@ Foundry consists of:
 
 https://book.getfoundry.sh/
 
+## Protocol docs (GitBook)
+
+The first-draft protocol documentation lives in `docs/gitbook/README.md`.
+
 ## Usage
 
 ### Build

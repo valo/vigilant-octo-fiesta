@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-This repository implements the Euler CDP protocol with Foundry. Follow the rules below to keep deployments auditable and repeatable.
+This repository implements the DIBOR protocol with Foundry. Follow the rules below to keep deployments auditable and repeatable.
 
 ## Project Structure & Module Organization
 - `src/` holds production Solidity (e.g. `nUSD.sol`, modules, `interfaces/` for shared types); keep upgradeable patterns there.

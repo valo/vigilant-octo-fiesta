@@ -41,7 +41,7 @@ After deployment, governance typically performs:
   - `dfUSD.grantRole(MINTER_ROLE, psm)`
   - `dfUSD.setCapacity(psm, type(uint128).max)` (or a chosen cap)
 - Enable collateral vaults on the `dfUSD` vault via `ops/src/propose-synth-collateral.ts`
-- (Optional) Set the `dsrVault` on `dfUSD` to point to the Savings Rate Module
+- (Optional) Set the `dsrVault` on `dfUSD` to point to the Savings Rate Module via `pnpm --dir ops run propose:set-dsr-vault` (uses `SYNTH_ADDRESS` and `SAVINGS_RATE_ADDRESS`)
 
 ## Local development
 

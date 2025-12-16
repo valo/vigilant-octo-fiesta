@@ -20,6 +20,7 @@ Foundry broadcast artifacts (`broadcast/`).
 | `dfUSD` token | `SYNTH_ADDRESS` | [`0xE59Fa551812209Ba9F78B536cB491343c4D4ceA3`](https://sepolia.etherscan.io/address/0xE59Fa551812209Ba9F78B536cB491343c4D4ceA3) |
 | Peg Stability Module | `PSM_ADDRESS` | [`0x47669519Dd036235480e94D495a1BD6F2A614dBA`](https://sepolia.etherscan.io/address/0x47669519Dd036235480e94D495a1BD6F2A614dBA) |
 | `dfUSD` EVault (debt vault) | `NUSD_VAULT_ADDRESS` | [`0xA4947e33c94dC69943Fa86B1276a04966956B728`](https://sepolia.etherscan.io/address/0xA4947e33c94dC69943Fa86B1276a04966956B728) |
+| Savings Module (`sdfUSD`) | `SAVINGS_RATE_ADDRESS` | [`0x11dbdd24e027af9ec1813a3ecdc1dab6e9b11dbd`](https://sepolia.etherscan.io/address/0x11dbdd24e027af9ec1813a3ecdc1dab6e9b11dbd) |
 
 ### Collateral vaults
 

@@ -2,7 +2,7 @@
 
 Governance in this repository is designed around a Gnosis Safe that acts as:
 
-- The admin for protocol-owned contracts (e.g. `nUSD` admin role, PSM owner)
+- The admin for protocol-owned contracts (e.g. `dfUSD` admin role, PSM owner)
 - The governor/admin for EVK vaults
 - The governor for the Euler oracle router (`EulerRouter`)
 
@@ -13,7 +13,7 @@ scripts read configuration from environment variables and create a Safe transact
 
 Common actions:
 
-- **Enable collateral on the `nUSD` vault + configure oracles**
+- **Enable collateral on the `dfUSD` vault + configure oracles**
   - Script: `ops/src/propose-synth-collateral.ts`
   - Actions:
     - `EVault.setLTV(collateralVault, borrowLtvBps, liquidationLtvBps, rampDuration)`
@@ -25,9 +25,9 @@ Common actions:
 - **Update an EVault IRM**
   - Script: `ops/src/propose-irm.ts`
   - Action: `EVault.setInterestRateModel(irm)`
-- **Grant keeper role on `nUSD`**
+- **Grant keeper role on `dfUSD`**
   - Script: `ops/src/propose-synth-keeper.ts`
-  - Action: `nUSD.grantRole(KEEPER_ROLE, keeper)`
+  - Action: `dfUSD.grantRole(KEEPER_ROLE, keeper)`
 
 ## Environment variables
 

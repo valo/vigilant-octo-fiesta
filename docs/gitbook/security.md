@@ -4,7 +4,7 @@ This page captures current security-relevant notes and known limitations for the
 
 ## Trust and permissions
 
-- `nUSD` uses `AccessControl`. A privileged admin can:
+- `dfUSD` uses `AccessControl`. A privileged admin can:
   - Add/remove minters and set minting caps
   - Configure the Savings Rate Module address and interest fee
 - The PSM is `Ownable` and the owner can:
@@ -15,7 +15,7 @@ This page captures current security-relevant notes and known limitations for the
 ## Oracle assumptions
 
 - Vault pricing depends on the configured `EulerRouter` oracle router and its adapters.
-- Deploy scripts configure Chainlink adapters for ETH/USD and BTC/USD, plus a fixed rate oracle for `nUSD/USDC` (testnet).
+- Deploy scripts configure Chainlink adapters for ETH/USD and BTC/USD, plus a fixed rate oracle for `dfUSD/USDC` (testnet).
 
 ## Known draft gaps
 
@@ -25,5 +25,5 @@ This page captures current security-relevant notes and known limitations for the
 
 ## Reporting
 
-The `nUSD` contract includes a `@custom:security-contact` tag. For repository-level security processes, align with the
+The `dfUSD` contract includes a `@custom:security-contact` tag. For repository-level security processes, align with the
 Euler security program as applicable.

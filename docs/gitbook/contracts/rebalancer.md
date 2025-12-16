@@ -14,7 +14,7 @@ Given two positions (`accountA` on `vaultA`, `accountB` on `vaultB`):
 
 1. The contract computes each account’s health factor (`collateralValue / liabilityValue`).
 2. It identifies the “risky” (lower health) and “safe” account.
-3. It borrows from the safer account and repays the riskier account, moving `nUSD` debt until health factors converge.
+3. It borrows from the safer account and repays the riskier account, moving `dfUSD` debt until health factors converge.
 4. It charges a configurable fee (`feeBps`) capped by `maxFeeBps` provided by the caller/signer.
 
 ## Authorization modes

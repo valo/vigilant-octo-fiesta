@@ -2,7 +2,9 @@
 
 Source: `src/SavingsRateModule.sol`
 
-The Savings Rate Module (SRM) is an ERC‑4626 vault for a single ERC‑20 asset (intended to be `nUSD`). It implements a
+The Savings Rate Module (SRM) is an ERC‑4626 vault for a single ERC‑20 asset (intended to be `dfUSD`).
+
+Depositing `dfUSD` mints Savings Module shares (referred to in the docs as `sdfUSD`). It implements a
 “drip” mechanism where donated tokens are streamed to depositors at a constant rate over a configured duration.
 
 ## Key ideas

@@ -7,7 +7,7 @@ their role at a high level but do not duplicate their full specifications here.
 
 ## Index
 
-- `nUSD`: `docs/gitbook/contracts/nusd.md`
+- `dfUSD`: `docs/gitbook/contracts/dfusd.md`
 - `PegStabilityModule` (+ `PegStabilityModuleYield`): `docs/gitbook/contracts/psm.md`
 - `SavingsRateModule`: `docs/gitbook/contracts/savings-rate-module.md`
 - Interest Rate Models: `docs/gitbook/contracts/interest-rate-models.md`

@@ -2,9 +2,10 @@
 
 - [DIBOR Protocol](README.md)
 - [Overview](overview.md)
+- [Vision & Long-Term Plan](vision.md)
 - [Architecture](architecture.md)
 - [Contracts](contracts/README.md)
-  - [nUSD](contracts/nusd.md)
+  - [dfUSD](contracts/dfusd.md)
   - [Peg Stability Module (PSM)](contracts/psm.md)
   - [Savings Rate Module](contracts/savings-rate-module.md)
   - [Interest Rate Models](contracts/interest-rate-models.md)

@@ -17,9 +17,9 @@ Foundry broadcast artifacts (`broadcast/`).
 
 | Name | Env var | Address |
 | --- | --- | --- |
-| `nUSD` token | `SYNTH_ADDRESS` | `0xE59Fa551812209Ba9F78B536cB491343c4D4ceA3` |
+| `dfUSD` token | `SYNTH_ADDRESS` | `0xE59Fa551812209Ba9F78B536cB491343c4D4ceA3` |
 | Peg Stability Module | `PSM_ADDRESS` | `0x47669519Dd036235480e94D495a1BD6F2A614dBA` |
-| `nUSD` EVault (debt vault) | `NUSD_VAULT_ADDRESS` | `0xA4947e33c94dC69943Fa86B1276a04966956B728` |
+| `dfUSD` EVault (debt vault) | `NUSD_VAULT_ADDRESS` | `0xA4947e33c94dC69943Fa86B1276a04966956B728` |
 
 ### Collateral vaults
 

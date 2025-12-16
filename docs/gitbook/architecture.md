@@ -59,26 +59,26 @@ See `docs/gitbook/contracts/rebalancer.md`.
 ```mermaid
 flowchart LR
   User((User))
-  CollVault[Collateral EVault\n(WETH/WBTC)]
-  DebtVault[dfUSD EVault\n(debt vault)]
-  PSM[Peg Stability Module\n(USDC ↔ dfUSD)]
+  CollVault["Collateral EVault<br/>(WETH/WBTC)"]
+  DebtVault["dfUSD EVault<br/>(debt vault)"]
+  PSM["Peg Stability Module<br/>(USDC <-> dfUSD)"]
   dfUSD[dfUSD token]
   Oracle[EulerRouter + adapters]
-  Safe[Gnosis Safe\n(governor/admin)]
+  Safe["Gnosis Safe<br/>(governor/admin)"]
 
-  User -->|deposit collateral| CollVault
-  User -->|enable collateral (EVC)| DebtVault
-  User -->|borrow dfUSD| DebtVault --> dfUSD --> User
+  User -->|"deposit collateral"| CollVault
+  User -->|"enable collateral (EVC)"| DebtVault
+  User -->|"borrow dfUSD"| DebtVault --> dfUSD --> User
 
-  User -->|swap USDC→dfUSD| PSM --> dfUSD
-  User -->|swap dfUSD→USDC| PSM
+  User -->|"swap USDC -> dfUSD"| PSM --> dfUSD
+  User -->|"swap dfUSD -> USDC"| PSM
 
-  DebtVault <-->|prices| Oracle
-  CollVault <-->|prices| Oracle
+  DebtVault <-->|"prices"| Oracle
+  CollVault <-->|"prices"| Oracle
 
-  Safe -->|governance| DebtVault
-  Safe -->|governance| PSM
-  Safe -->|governance| Oracle
+  Safe -->|"governance"| DebtVault
+  Safe -->|"governance"| PSM
+  Safe -->|"governance"| Oracle
 ```
 
 ## Repository mapping

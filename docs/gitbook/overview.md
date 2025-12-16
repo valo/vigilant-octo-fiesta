@@ -46,8 +46,8 @@ Deployment and parameter updates are designed to be executed via a Gnosis Safe. 
 - Updating an EVault’s IRM
 - Assigning keepers for operational actions
 
-See `docs/gitbook/governance.md`.
+See [governance.md](governance.md).
 
 ## Vision and roadmap
 
-For the longer-term plan and roadmap (dfUSD, RWAs, multichain strategy), see `docs/gitbook/vision.md`.
+For the longer-term plan and roadmap (dfUSD, RWAs, multichain strategy), see [vision.md](vision.md).

@@ -36,7 +36,7 @@ The `ops/` scripts expect (at minimum):
 - `CHAIN_ID`, `SAFE_ADDRESS` (in `ops/.env`)
 - Contract addresses such as `NUSD_VAULT_ADDRESS` / `SYNTH_ADDRESS` (usually from repo root `.env`)
 
-See `docs/gitbook/deployment.md` for the deployment-time configuration keys.
+See [deployment.md](deployment.md) for the deployment-time configuration keys.
 
 ## Deployment traces
 

@@ -28,5 +28,4 @@ vaults”.
 
 ## Roadmap: "DIBOR rate"
 
-The long-term plan describes an algorithmic rate anchored to the 3-month T-bill yield, adjusted by system leverage/PSM coverage and a collateral-quality premium (beta vs BTC), updated biweekly. This is not fully implemented in the current IRM set and is tracked in `docs/gitbook/vision.md`.
-
+The long-term plan describes an algorithmic rate anchored to the 3-month T-bill yield, adjusted by system leverage/PSM coverage and a collateral-quality premium (beta vs BTC), updated biweekly. This is not fully implemented in the current IRM set and is tracked in [vision.md](../vision.md).

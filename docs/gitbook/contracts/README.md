@@ -7,8 +7,8 @@ their role at a high level but do not duplicate their full specifications here.
 
 ## Index
 
-- `dfUSD`: `docs/gitbook/contracts/dfusd.md`
-- `PegStabilityModule` (+ `PegStabilityModuleYield`): `docs/gitbook/contracts/psm.md`
-- `SavingsRateModule`: `docs/gitbook/contracts/savings-rate-module.md`
-- Interest Rate Models: `docs/gitbook/contracts/interest-rate-models.md`
-- `Rebalancer`: `docs/gitbook/contracts/rebalancer.md`
+- `dfUSD`: [dfusd.md](dfusd.md)
+- `PegStabilityModule` (+ `PegStabilityModuleYield`): [psm.md](psm.md)
+- `SavingsRateModule`: [savings-rate-module.md](savings-rate-module.md)
+- Interest Rate Models: [interest-rate-models.md](interest-rate-models.md)
+- `Rebalancer`: [rebalancer.md](rebalancer.md)

@@ -12,7 +12,7 @@ This section describes how the repository’s contracts (`src/`) compose into an
 - `ALLOCATOR_ROLE`: entities that can allocate `dfUSD` into ERC‑4626 vaults (protocol treasury operations)
 - `KEEPER_ROLE`: entities that can move accrued interest into the Savings Rate Module
 
-See `docs/gitbook/contracts/dfusd.md`.
+See [contracts/dfusd.md](contracts/dfusd.md).
 
 ### 2) Debt + collateral vaults: EVK `EVault`s
 
@@ -38,21 +38,21 @@ conversion price and fees.
 
 It also maintains a TWAR oracle over “accounted reserves” (a tracked reserve value, not `balanceOf()`).
 
-See `docs/gitbook/contracts/psm.md`.
+See [contracts/psm.md](contracts/psm.md).
 
 ### 4) Savings Rate Module (SRM)
 
 `SavingsRateModule` is an ERC‑4626 vault for `dfUSD` that streams donated `dfUSD` over time to depositors. It is intended
 to be used as a “savings rate” primitive (similar to “dripping” vault patterns).
 
-See `docs/gitbook/contracts/savings-rate-module.md`.
+See [contracts/savings-rate-module.md](contracts/savings-rate-module.md).
 
 ### 5) Automation: Rebalancer
 
 `Rebalancer` is an optional utility contract that shifts debt between two Euler accounts (same registered owner) so their
 health factors converge, with an explicit fee cap.
 
-See `docs/gitbook/contracts/rebalancer.md`.
+See [contracts/rebalancer.md](contracts/rebalancer.md).
 
 ## Data flow diagram (conceptual)
 

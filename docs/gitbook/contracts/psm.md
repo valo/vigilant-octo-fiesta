@@ -65,5 +65,4 @@ This variant is intended for underlying assets like staked USDe with a cooldown-
 
 ## Roadmap notes
 
-The long-term plan describes a PSM where users deposit USDe to access the Savings Module and where the PSM reserve coverage ratio feeds into the borrowing rate. Current deployments in this repo are configured via `.env` and described in `docs/gitbook/addresses.md`.
-
+The long-term plan describes a PSM where users deposit USDe to access the Savings Module and where the PSM reserve coverage ratio feeds into the borrowing rate. Current deployments in this repo are configured via `.env` and described in [addresses.md](../addresses.md).

@@ -109,4 +109,4 @@ This repository currently implements the onchain building blocks (token, PSM, sa
 support the direction above.
 
 The onchain ERC-20 contract implementing dfUSD in this repository is named `nUSD` (see `src/nUSD.sol`). Current
-deployments and addresses are listed in `docs/gitbook/addresses.md`.
+deployments and addresses are listed in [addresses.md](addresses.md).

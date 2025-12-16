@@ -12,7 +12,8 @@
 		"propose:irm": "tsx src/propose-irm.ts",
 		"propose:psm-fees": "tsx src/propose-psm-fees.ts",
 		"propose:ltv": "tsx src/propose-ltv.ts",
-		"propose:synth-collateral": "tsx src/propose-synth-collateral.ts"
+		"propose:synth-collateral": "tsx src/propose-synth-collateral.ts",
+		"propose:synth-keeper": "tsx src/propose-synth-keeper.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^24.5.2",

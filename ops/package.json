@@ -13,7 +13,8 @@
 		"propose:psm-fees": "tsx src/propose-psm-fees.ts",
 		"propose:ltv": "tsx src/propose-ltv.ts",
 		"propose:synth-collateral": "tsx src/propose-synth-collateral.ts",
-		"propose:synth-keeper": "tsx src/propose-synth-keeper.ts"
+		"propose:synth-keeper": "tsx src/propose-synth-keeper.ts",
+		"propose:set-dsr-vault": "tsx src/propose-set-dsr-vault.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^24.5.2",

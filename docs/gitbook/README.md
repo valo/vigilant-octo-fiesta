@@ -16,13 +16,13 @@ Safe.
 
 ## Quick links
 
-- Protocol overview: `docs/gitbook/overview.md`
-- Vision & roadmap: `docs/gitbook/vision.md`
-- Architecture: `docs/gitbook/architecture.md`
-- Contracts reference: `docs/gitbook/contracts/`
-- Governance & ops: `docs/gitbook/governance.md`
-- Deployment: `docs/gitbook/deployment.md`
-- Contract addresses: `docs/gitbook/addresses.md`
+- [Overview](overview.md)
+- [Vision & Long-Term Plan](vision.md)
+- [Architecture](architecture.md)
+- [Contracts reference](contracts/README.md)
+- [Governance & Ops](governance.md)
+- [Deployment](deployment.md)
+- [Contract Addresses](addresses.md)
 
 ## Scope and guarantees (draft)
 
